@@ -11,7 +11,7 @@ the Solid website: clients get the link directly from their account manager.
 - Functions: `api/submit.js` (stores + notifies), `api/view.js` (`/s/<id>?t=<token>`, one submission),
   `api/inbox.js` (`/inbox?key=<team key>`, all submissions).
 
-Notifications need Google credentials in the Vercel project (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+Notifications: the simplest setup is a Gmail app password for hello@ (`GMAIL_USER`, `GMAIL_APP_PASSWORD` in the Vercel project; emails go to `NOTIFY_TO`). Alternatively Google OAuth credentials in the Vercel project (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
 `GOOGLE_REFRESH_TOKEN`, the same OAuth client as consultation.solid2017.com). With the Gmail send scope the
 team gets an email (`NOTIFY_TO`); with a calendar-only grant it gets a calendar invite instead
 (`CALENDAR_INVITEES`). Without credentials, submissions are still stored and visible in the inbox.

@@ -229,13 +229,46 @@ function list(env, fallback) {
   return (process.env[env] || fallback).split(",").map((s) => s.trim()).filter(Boolean);
 }
 
+/* ---------------- Gmail SMTP with an app password (simplest to set up) ---------------- */
+
+function smtpConfigured() {
+  return Boolean(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
+}
+
+async function sendViaSmtp({ to, subject, text }) {
+  const nodemailer = require("nodemailer");
+  const user = process.env.GMAIL_USER;
+  const transport = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: { user, pass: process.env.GMAIL_APP_PASSWORD },
+  });
+  await transport.sendMail({
+    from: '"Solid Design Studio" <' + user + ">",
+    to: to.join(", "),
+    replyTo: process.env.REPLY_TO || user,
+    subject,
+    text,
+  });
+}
+
 /** Returns how the team was told: "email", "calendar" or "none". Never throws. */
 async function notify(sub, link) {
-  if (!googleConfigured()) return "none";
   const subject = "New client questionnaire: " + summaryLine(sub.answers);
   const text = formatText(sub, link);
+  const to = list("NOTIFY_TO", "fatimah@solid2017.com,hello@solid2017.com");
+  if (smtpConfigured()) {
+    try {
+      await sendViaSmtp({ to, subject, text });
+      return "email";
+    } catch (err) {
+      console.error("smtp send failed", err && err.message);
+    }
+  }
+  if (!googleConfigured()) return "none";
   try {
-    await sendMail({ to: list("NOTIFY_TO", "fatimah@solid2017.com,hello@solid2017.com"), subject, text });
+    await sendMail({ to, subject, text });
     return "email";
   } catch (err) {
     console.error("gmail send failed, trying a calendar invite", err && err.message);
