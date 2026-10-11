@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/s/:id", "destination": "/api/view?id=:id" },
+    { "source": "/inbox", "destination": "/api/inbox" }
+  ],
+  "headers": [
+    { "source": "/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+  ]
+}

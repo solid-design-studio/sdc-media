@@ -1,0 +1,6 @@
+{
+  "name": "solid-questionnaire",
+  "private": true,
+  "description": "Solid Design Studio client questionnaire (interior & spatial design): a private link clients fill in; submissions go to Supabase and the team is notified.",
+  "engines": { "node": "22.x" }
+}

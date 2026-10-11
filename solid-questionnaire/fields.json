@@ -1,0 +1,742 @@
+{
+"sections": [
+{
+"code": "01",
+"title": "Project Overview"
+},
+{
+"code": "02",
+"title": "Project & Brand"
+},
+{
+"code": "03",
+"title": "Level of Change"
+},
+{
+"code": "04",
+"title": "Audience & Experience"
+},
+{
+"code": "05",
+"title": "Look, Feel & Creative Direction"
+},
+{
+"code": "06",
+"title": "Colour, Materials & Visual References"
+},
+{
+"code": "07",
+"title": "Brand & Visual Elements"
+},
+{
+"code": "08",
+"title": "Project-Specific Requirements"
+},
+{
+"code": "08A",
+"title": "Project-Specific Requirements — F&B Projects"
+},
+{
+"code": "08B",
+"title": "Project-Specific Requirements — Retail Projects"
+},
+{
+"code": "08C",
+"title": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"code": "08D",
+"title": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"code": "09",
+"title": "Space, Technical & Existing Conditions"
+},
+{
+"code": "10",
+"title": "Budget, Timeline & Decision-Making"
+},
+{
+"code": "11",
+"title": "Before We Begin"
+},
+{
+"code": "12",
+"title": "Final Check"
+}
+],
+"fields": [
+{
+"key": "01.1 Project / Brand Name",
+"label": "Project / Brand Name",
+"section": "01",
+"sectionTitle": "Project Overview"
+},
+{
+"key": "01.2 Primary Contact",
+"label": "Primary Contact",
+"section": "01",
+"sectionTitle": "Project Overview"
+},
+{
+"key": "01.3 Project Location / Venue",
+"label": "Project Location / Venue",
+"section": "01",
+"sectionTitle": "Project Overview"
+},
+{
+"key": "01.4 Looking for from Solid",
+"label": "What are you looking for from Solid?",
+"section": "01",
+"sectionTitle": "Project Overview"
+},
+{
+"key": "01.4 Looking for from Solid — Other",
+"label": "What are you looking for from Solid? (Other)",
+"section": "01",
+"sectionTitle": "Project Overview"
+},
+{
+"key": "01.5 Project type",
+"label": "What type of project is this?",
+"section": "01",
+"sectionTitle": "Project Overview"
+},
+{
+"key": "01.5 Project type — Other",
+"label": "What type of project is this? (Other)",
+"section": "01",
+"sectionTitle": "Project Overview"
+},
+{
+"key": "01.6 Approximate Area / Footprint",
+"label": "Approximate Area / Footprint",
+"section": "01",
+"sectionTitle": "Project Overview"
+},
+{
+"key": "02.1 This project is for",
+"label": "Is this project for:",
+"section": "02",
+"sectionTitle": "Project & Brand"
+},
+{
+"key": "02.1 This project is for — Other",
+"label": "Is this project for: (Other)",
+"section": "02",
+"sectionTitle": "Project & Brand"
+},
+{
+"key": "02.2 Main goals",
+"label": "What are the main goals of this project?",
+"section": "02",
+"sectionTitle": "Project & Brand"
+},
+{
+"key": "02.2 Main goals — Other",
+"label": "What are the main goals of this project? (Other)",
+"section": "02",
+"sectionTitle": "Project & Brand"
+},
+{
+"key": "03.1 Level of change",
+"label": "How much are you looking to change?",
+"section": "03",
+"sectionTitle": "Level of Change"
+},
+{
+"key": "03.2 Keep",
+"label": "What would you like to keep?",
+"section": "03",
+"sectionTitle": "Level of Change"
+},
+{
+"key": "03.3 Move away from / change",
+"label": "What would you like to move away from or change?",
+"section": "03",
+"sectionTitle": "Level of Change"
+},
+{
+"key": "03.4 Must remain unchanged",
+"label": "Is there anything that must remain unchanged?",
+"section": "03",
+"sectionTitle": "Level of Change"
+},
+{
+"key": "04.1 Primary audience",
+"label": "Who is the primary audience for this space?",
+"section": "04",
+"sectionTitle": "Audience & Experience"
+},
+{
+"key": "04.1 Primary audience — Other",
+"label": "Who is the primary audience for this space? (Other)",
+"section": "04",
+"sectionTitle": "Audience & Experience"
+},
+{
+"key": "04.2 Attract new audience",
+"label": "Is the space intended to attract a new or different audience?",
+"section": "04",
+"sectionTitle": "Audience & Experience"
+},
+{
+"key": "04.2 New audience — who",
+"label": "If yes, who?",
+"section": "04",
+"sectionTitle": "Audience & Experience"
+},
+{
+"key": "04.3 Experience on entry",
+"label": "What should people experience when they enter the space?",
+"section": "04",
+"sectionTitle": "Audience & Experience"
+},
+{
+"key": "04.3 Experience on entry — Other",
+"label": "What should people experience when they enter the space? (Other)",
+"section": "04",
+"sectionTitle": "Audience & Experience"
+},
+{
+"key": "04.4 Visitors should be able to",
+"label": "If the project is experience-led, what should visitors be able to do?",
+"section": "04",
+"sectionTitle": "Audience & Experience"
+},
+{
+"key": "04.4 Visitors should be able to — Other",
+"label": "If the project is experience-led, what should visitors be able to do? (Other)",
+"section": "04",
+"sectionTitle": "Audience & Experience"
+},
+{
+"key": "05.1 Space should feel",
+"label": "How would you like the space to feel?",
+"section": "05",
+"sectionTitle": "Look, Feel & Creative Direction"
+},
+{
+"key": "05.1 Space should feel — Other",
+"label": "How would you like the space to feel? (Other)",
+"section": "05",
+"sectionTitle": "Look, Feel & Creative Direction"
+},
+{
+"key": "05.2 Space should NOT feel",
+"label": "How would you NOT want the space to feel?",
+"section": "05",
+"sectionTitle": "Look, Feel & Creative Direction"
+},
+{
+"key": "05.2 Space should NOT feel — Other",
+"label": "How would you NOT want the space to feel? (Other)",
+"section": "05",
+"sectionTitle": "Look, Feel & Creative Direction"
+},
+{
+"key": "05.3 Creative direction",
+"label": "Which creative direction feels closest to what you are looking for?",
+"section": "05",
+"sectionTitle": "Look, Feel & Creative Direction"
+},
+{
+"key": "06.1 Colour direction",
+"label": "Which colour direction feels closest to what you are looking for?",
+"section": "06",
+"sectionTitle": "Colour, Materials & Visual References"
+},
+{
+"key": "06.2 Colours to avoid",
+"label": "Are there any colours you strongly dislike or want to avoid?",
+"section": "06",
+"sectionTitle": "Colour, Materials & Visual References"
+},
+{
+"key": "06.3 Materials",
+"label": "Which materials appeal to you?",
+"section": "06",
+"sectionTitle": "Colour, Materials & Visual References"
+},
+{
+"key": "06.4 Materials to avoid",
+"label": "Are there any materials or finishes you strongly dislike or want to avoid?",
+"section": "06",
+"sectionTitle": "Colour, Materials & Visual References"
+},
+{
+"key": "06.4 Materials to avoid — links / notes",
+"label": "If yes, please upload or share links.",
+"section": "06",
+"sectionTitle": "Colour, Materials & Visual References"
+},
+{
+"key": "06.5 Visual references",
+"label": "Do you have visual references you would like to share?",
+"section": "06",
+"sectionTitle": "Colour, Materials & Visual References"
+},
+{
+"key": "06.5 Visual references — links",
+"label": "If yes, please upload or share links.",
+"section": "06",
+"sectionTitle": "Colour, Materials & Visual References"
+},
+{
+"key": "06.6 Examples NOT wanted",
+"label": "Do you have examples of spaces or directions you do NOT want?",
+"section": "06",
+"sectionTitle": "Colour, Materials & Visual References"
+},
+{
+"key": "06.6 Examples NOT wanted — links",
+"label": "If yes, please upload or share links.",
+"section": "06",
+"sectionTitle": "Colour, Materials & Visual References"
+},
+{
+"key": "06.7 Liked about references",
+"label": "What do you like about the references you shared?",
+"section": "06",
+"sectionTitle": "Colour, Materials & Visual References"
+},
+{
+"key": "06.7 Liked about references — Other",
+"label": "What do you like about the references you shared? (Other)",
+"section": "06",
+"sectionTitle": "Colour, Materials & Visual References"
+},
+{
+"key": "07.1 Brand guidelines",
+"label": "Do you currently have brand guidelines?",
+"section": "07",
+"sectionTitle": "Brand & Visual Elements"
+},
+{
+"key": "07.2 Brand elements to reflect",
+"label": "Which existing brand elements need to be reflected in the space?",
+"section": "07",
+"sectionTitle": "Brand & Visual Elements"
+},
+{
+"key": "07.2 Brand elements to reflect — Other",
+"label": "Which existing brand elements need to be reflected in the space? (Other)",
+"section": "07",
+"sectionTitle": "Brand & Visual Elements"
+},
+{
+"key": "07.3 Brand elements to retain exactly",
+"label": "Are there any brand elements that must be retained exactly as they are?",
+"section": "07",
+"sectionTitle": "Brand & Visual Elements"
+},
+{
+"key": "07.4 Brand elements to evolve",
+"label": "Are there any brand elements you would like to evolve through the spatial design?",
+"section": "07",
+"sectionTitle": "Brand & Visual Elements"
+},
+{
+"key": "08A.1 F&B concept",
+"label": "What type of F&B concept is this?",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08A.1 F&B concept — Other",
+"label": "What type of F&B concept is this? (Other)",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08A.2 Service model",
+"label": "What is the service model?",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08A.3 Seating — Indoor",
+"label": "Target Seating Capacity — Indoor",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08A.3 Seating — Outdoor",
+"label": "Target Seating Capacity — Outdoor",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08A.3 Seating — Total",
+"label": "Target Seating Capacity — Total",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08A.4 Zones required",
+"label": "Which zones are required?",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08A.4 Zones required — Other",
+"label": "Which zones are required? (Other)",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08A.5 Operational priorities",
+"label": "What are the main operational priorities?",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08A.5 Operational priorities — Other",
+"label": "What are the main operational priorities? (Other)",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08A.6 Menu / equipment requirements",
+"label": "Are there menu items or equipment requirements that will affect the design?",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08A.7 Customers notice first",
+"label": "What should customers notice first?",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08A.7 Customers notice first — Other",
+"label": "What should customers notice first? (Other)",
+"section": "08A",
+"sectionTitle": "Project-Specific Requirements — F&B Projects"
+},
+{
+"key": "08B.1 Products sold",
+"label": "What products will be sold?",
+"section": "08B",
+"sectionTitle": "Project-Specific Requirements — Retail Projects"
+},
+{
+"key": "08B.2 Retail experience priorities",
+"label": "What should the retail experience prioritise?",
+"section": "08B",
+"sectionTitle": "Project-Specific Requirements — Retail Projects"
+},
+{
+"key": "08B.2 Retail experience priorities — Other",
+"label": "What should the retail experience prioritise? (Other)",
+"section": "08B",
+"sectionTitle": "Project-Specific Requirements — Retail Projects"
+},
+{
+"key": "08B.3 Display types",
+"label": "What display types are required?",
+"section": "08B",
+"sectionTitle": "Project-Specific Requirements — Retail Projects"
+},
+{
+"key": "08B.3 Display types — Other",
+"label": "What display types are required? (Other)",
+"section": "08B",
+"sectionTitle": "Project-Specific Requirements — Retail Projects"
+},
+{
+"key": "08B.4 Support spaces",
+"label": "What support spaces are required?",
+"section": "08B",
+"sectionTitle": "Project-Specific Requirements — Retail Projects"
+},
+{
+"key": "08B.4 Support spaces — Other",
+"label": "What support spaces are required? (Other)",
+"section": "08B",
+"sectionTitle": "Project-Specific Requirements — Retail Projects"
+},
+{
+"key": "08B.5 Product change frequency",
+"label": "How often will products or collections change?",
+"section": "08B",
+"sectionTitle": "Project-Specific Requirements — Retail Projects"
+},
+{
+"key": "08B.5 Product change frequency — Other",
+"label": "How often will products or collections change? (Other)",
+"section": "08B",
+"sectionTitle": "Project-Specific Requirements — Retail Projects"
+},
+{
+"key": "08B.6 Display flexibility",
+"label": "Should the display system be flexible?",
+"section": "08B",
+"sectionTitle": "Project-Specific Requirements — Retail Projects"
+},
+{
+"key": "08C.1 Activation purpose",
+"label": "What is the main purpose of the activation?",
+"section": "08C",
+"sectionTitle": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"key": "08C.1 Activation purpose — Other",
+"label": "What is the main purpose of the activation? (Other)",
+"section": "08C",
+"sectionTitle": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"key": "08C.2 Venue / Location",
+"label": "Venue / Location",
+"section": "08C",
+"sectionTitle": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"key": "08C.3 Dates / Duration",
+"label": "Dates / Duration",
+"section": "08C",
+"sectionTitle": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"key": "08C.4 Footprint — Width",
+"label": "Approximate footprint — Width",
+"section": "08C",
+"sectionTitle": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"key": "08C.4 Footprint — Depth",
+"label": "Approximate footprint — Depth",
+"section": "08C",
+"sectionTitle": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"key": "08C.4 Footprint — Height limit",
+"label": "Approximate footprint — Height limit",
+"section": "08C",
+"sectionTitle": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"key": "08C.5 Activities",
+"label": "What activities will happen within the space?",
+"section": "08C",
+"sectionTitle": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"key": "08C.5 Activities — Other",
+"label": "What activities will happen within the space? (Other)",
+"section": "08C",
+"sectionTitle": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"key": "08C.6 Reuse requirements",
+"label": "What are the requirements around reuse?",
+"section": "08C",
+"sectionTitle": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"key": "08C.6 Reuse requirements — Other",
+"label": "What are the requirements around reuse? (Other)",
+"section": "08C",
+"sectionTitle": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"key": "08C.7 Key memorable moment / focal point",
+"label": "What should be the key memorable moment or focal point?",
+"section": "08C",
+"sectionTitle": "Project-Specific Requirements — Pop-up / Activation"
+},
+{
+"key": "08D.1 Event / Exhibition Name",
+"label": "Event / Exhibition Name",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.2 Venue",
+"label": "Venue",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.3 Booth — Width",
+"label": "Booth Dimensions — Width",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.3 Booth — Depth",
+"label": "Booth Dimensions — Depth",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.3 Booth — Maximum Height",
+"label": "Booth Dimensions — Maximum Height",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.4 Booth configuration",
+"label": "Booth Configuration",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.5 Main objective",
+"label": "Main objective",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.5 Main objective — Other",
+"label": "Main objective (Other)",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.6 Required zones",
+"label": "Required zones",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.6 Required zones — Other",
+"label": "Required zones (Other)",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.7 Peak — Visitors",
+"label": "Expected visitors / staff at peak time — Visitors",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.7 Peak — Staff",
+"label": "Expected visitors / staff at peak time — Staff",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.8 Technology requirements",
+"label": "Technology requirements",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "08D.8 Technology requirements — Other",
+"label": "Technology requirements (Other)",
+"section": "08D",
+"sectionTitle": "Project-Specific Requirements — Exhibition / Booth"
+},
+{
+"key": "09.1 Information available",
+"label": "Which project information is currently available?",
+"section": "09",
+"sectionTitle": "Space, Technical & Existing Conditions"
+},
+{
+"key": "09.1 Information available — Other",
+"label": "Which project information is currently available? (Other)",
+"section": "09",
+"sectionTitle": "Space, Technical & Existing Conditions"
+},
+{
+"key": "09.2 Elements to retain",
+"label": "Which existing elements need to be retained?",
+"section": "09",
+"sectionTitle": "Space, Technical & Existing Conditions"
+},
+{
+"key": "09.2 Elements to retain — Other",
+"label": "Which existing elements need to be retained? (Other)",
+"section": "09",
+"sectionTitle": "Space, Technical & Existing Conditions"
+},
+{
+"key": "09.3 Cannot be moved / changed",
+"label": "Are there any elements that cannot be moved or changed?",
+"section": "09",
+"sectionTitle": "Space, Technical & Existing Conditions"
+},
+{
+"key": "09.3 Cannot be moved / changed — Other",
+"label": "Are there any elements that cannot be moved or changed? (Other)",
+"section": "09",
+"sectionTitle": "Space, Technical & Existing Conditions"
+},
+{
+"key": "09.4 Site / venue / authority restrictions",
+"label": "Are there any site, venue or authority restrictions we should know about?",
+"section": "09",
+"sectionTitle": "Space, Technical & Existing Conditions"
+},
+{
+"key": "09.4 Site / venue / authority restrictions — Other",
+"label": "Are there any site, venue or authority restrictions we should know about? (Other)",
+"section": "09",
+"sectionTitle": "Space, Technical & Existing Conditions"
+},
+{
+"key": "09.5 Technical / operational / site constraints",
+"label": "Are there any technical, operational or site constraints that could affect the design?",
+"section": "09",
+"sectionTitle": "Space, Technical & Existing Conditions"
+},
+{
+"key": "10.1 Budget",
+"label": "How would you describe the budget?",
+"section": "10",
+"sectionTitle": "Budget, Timeline & Decision-Making"
+},
+{
+"key": "10.2 Desired opening / launch date",
+"label": "What is the desired opening / launch date?",
+"section": "10",
+"sectionTitle": "Budget, Timeline & Decision-Making"
+},
+{
+"key": "11.1 Handover — Brand & Creative",
+"label": "Brand & Creative",
+"section": "11",
+"sectionTitle": "Before We Begin"
+},
+{
+"key": "11.1 Handover — Brand & Creative — Other",
+"label": "Brand & Creative (Other)",
+"section": "11",
+"sectionTitle": "Before We Begin"
+},
+{
+"key": "11.2 Handover — Space & Technical",
+"label": "Space & Technical",
+"section": "11",
+"sectionTitle": "Before We Begin"
+},
+{
+"key": "11.3 Handover — Project",
+"label": "Project",
+"section": "11",
+"sectionTitle": "Before We Begin"
+},
+{
+"key": "12.1 Project success means",
+"label": "What would make you feel that the project was successful?",
+"section": "12",
+"sectionTitle": "Final Check"
+},
+{
+"key": "12.1 Project success means — Other",
+"label": "What would make you feel that the project was successful? (Other)",
+"section": "12",
+"sectionTitle": "Final Check"
+},
+{
+"key": "12.2 Anything else",
+"label": "Is there anything important you would like us to know before we begin?",
+"section": "12",
+"sectionTitle": "Final Check"
+}
+]
+}
