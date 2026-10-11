@@ -4,7 +4,6 @@ const fieldsFile = require("../fields.json");
 
 const SUPABASE_URL = process.env.SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "";
-const TABLE = "questionnaire_submissions";
 
 function sbHeaders(extra) {
   return Object.assign(
@@ -24,14 +23,26 @@ async function sbFetch(path, init) {
   return text ? JSON.parse(text) : null;
 }
 
-/** Insert one submission; only the anon insert policy is needed. */
+/**
+ * Insert one submission through the security-definer function, so the site
+ * needs no table privileges at all. Returns the row's id and timestamp.
+ */
 async function insertSubmission(row) {
-  const rows = await sbFetch("/rest/v1/" + TABLE, {
+  const rows = await sbFetch("/rest/v1/rpc/questionnaire_submit", {
     method: "POST",
-    headers: sbHeaders({ Prefer: "return=representation" }),
-    body: JSON.stringify(row),
+    headers: sbHeaders(),
+    body: JSON.stringify({
+      p_project_name: row.project_name,
+      p_contact: row.contact,
+      p_project_type: row.project_type,
+      p_answers: row.answers,
+      p_access_token: row.access_token,
+      p_user_agent: row.user_agent,
+    }),
   });
-  return rows[0];
+  const r = Array.isArray(rows) ? rows[0] : rows;
+  if (!r || !r.id) throw new Error("questionnaire_submit returned no id");
+  return Object.assign({}, row, { id: r.id, created_at: r.created_at });
 }
 
 async function rpc(name, args) {
