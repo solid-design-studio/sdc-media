@@ -381,7 +381,8 @@ var steps=$('.cq-step'),nav=form.querySelector('.cq-nav'),err=form.querySelector
 var lbl=page.querySelector('[data-cq-step-label]'),ttl=page.querySelector('[data-cq-step-title]'),bar=page.querySelector('[data-cq-bar]');
 var cur=0;
 /* option checkboxes submit through one hidden field per question, so drop their own names */
-$('.cq-q[data-type=multi] input[type=checkbox]').forEach(function(c){c.removeAttribute('name');c.removeAttribute('data-name');c.removeAttribute('required')});
+function isMulti(q){return q.getAttribute('data-type')==='multi'||!!q.querySelector('input[data-collect]')}
+$('input[type=checkbox]').filter(function(c){var q=c.closest('.cq-q');return !!(q&&isMulti(q))}).forEach(function(c){c.removeAttribute('name');c.removeAttribute('data-name');c.removeAttribute('required')});
 function optText(i){var o=i.closest('.cq-opt');if(!o)return i.value||'';return (o.getAttribute('data-opt')||'').trim()||i.value||''}
 function radioVal(id){var q=form.querySelector('.cq-q[data-q="'+id+'"]');if(!q)return '';var r=q.querySelector('input[type=radio]:checked');return r?r.value:''}
 function evalShow(el){var c=el.getAttribute('data-show-if');if(!c)return true;try{c=JSON.parse(c)}catch(e){return true}var v=radioVal(c.q);if(c.equals!==undefined)return v===c.equals;if(c['in'])return c['in'].indexOf(v)>=0;return true}
@@ -392,7 +393,7 @@ $('.cq-opt',q).forEach(function(o){var i=o.querySelector('input');o.classList.to
 if(max){boxes.forEach(function(b){var lim=!b.checked&&n>=max;b.disabled=lim;b.closest('.cq-opt').classList.toggle('is-disabled',lim)})}
 var cnt=q.querySelector('.cq-count');if(cnt)cnt.textContent=max?(n+' of '+max+' selected'):(n?n+' selected':'');
 var oth=q.querySelector('.cq-other');if(oth){var on=$('input:checked',q).some(function(i){return optText(i)==='Other'});oth.classList.toggle('is-on',on);if(!on){var t=oth.querySelector('input');if(t)t.value=''}}
-if(q.getAttribute('data-type')==='multi')compile(q)}
+if(isMulti(q))compile(q)}
 function conditionals(){$('[data-show-if]').forEach(function(el){var show=evalShow(el);var hidden=el.classList.contains('cq-hidden');if(!show&&!hidden)clearInputs(el);el.classList.toggle('cq-hidden',!show)});
 steps.forEach(function(s){if(!s.getAttribute('data-conditional'))return;var subs=$('.cq-sub',s);var any=subs.some(function(x){return !x.classList.contains('cq-hidden')});s.classList.toggle('cq-skip',!any)})}
 function visible(){return steps.filter(function(s){return !s.classList.contains('cq-skip')})}
@@ -409,7 +410,7 @@ form.addEventListener('input',function(e){var q=e.target.closest('.cq-q');if(q&&
 form.addEventListener('click',function(e){var b=e.target.closest('[data-nav]');if(b){e.preventDefault();go(b.getAttribute('data-nav')==='next'?1:-1);return}
 var o=e.target.closest('.cq-opt');if(o&&!e.target.closest('input,label')){var i=o.querySelector('input');if(i&&!i.disabled)i.click()}});
 form.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='submit'){e.preventDefault();if(nav.classList.contains('has-next'))go(1)}});
-form.addEventListener('submit',function(e){var vs=visible();for(var i=0;i<vs.length;i++){if(!validate(vs[i])){e.preventDefault();e.stopImmediatePropagation();cur=i;paint();scrollTop();showErr('Please complete the highlighted fields before submitting.');return false}}$('.cq-q[data-type=multi]').forEach(compile)},true);
+form.addEventListener('submit',function(e){var vs=visible();for(var i=0;i<vs.length;i++){if(!validate(vs[i])){e.preventDefault();e.stopImmediatePropagation();cur=i;paint();scrollTop();showErr('Please complete the highlighted fields before submitting.');return false}}$('.cq-q').filter(isMulti).forEach(compile)},true);
 conditionals();$('.cq-q').forEach(refresh);paint();
 });
 })();
@@ -436,6 +437,7 @@ def preview_html(steps, shell, nav):
     body = webflowify(body)
     # mimic Webflow's form wrapper and messages
     body = body.replace('<form class="cq-form"', '<div class="cq-form w-form"><form')
+    body = re.sub(r' data-type="[a-z_]+"', '', body)  # Webflow drops data-type on publish
     body = body.replace('</form>', '</form><div class="w-form-done">Thank you — your questionnaire has been received. Your account manager will be in touch to confirm next steps.</div><div class="w-form-fail">Oops! Something went wrong while submitting the form.</div></div>')
     stub = """<script>
 window.__submissions=[];document.addEventListener('DOMContentLoaded',function(){document.querySelector('.cq-form form').addEventListener('submit',function(e){e.preventDefault();var fd=new FormData(e.target);var o={};fd.forEach(function(v,k){o[k]=v});window.__submissions.push(o);document.querySelector('.w-form').querySelector('form').style.display='none';document.querySelector('.w-form-done').style.display='block';});});
