@@ -373,7 +373,7 @@ JS = r"""<script>
 (function(){
 function ready(f){if(document.readyState!=='loading'){f()}else{document.addEventListener('DOMContentLoaded',f)}}
 ready(function(){
-var form=document.querySelector('form.cq-form');if(!form)return;
+var wrap=document.querySelector('.cq-form');var form=wrap?(wrap.tagName==='FORM'?wrap:wrap.querySelector('form')):null;if(!form)return;
 var page=form.closest('.cq-page')||document.body;page.classList.add('cq-js');
 form.setAttribute('novalidate','novalidate');
 var $=function(s,r){return Array.prototype.slice.call((r||form).querySelectorAll(s))};
@@ -435,10 +435,10 @@ def preview_html(steps, shell, nav):
     body = shell.replace('<div class="cq-steps"></div>', '<div class="cq-steps">%s</div>%s' % ("".join(steps), nav))
     body = webflowify(body)
     # mimic Webflow's form wrapper and messages
-    body = body.replace('<form class="cq-form"', '<div class="w-form"><form class="cq-form"')
+    body = body.replace('<form class="cq-form"', '<div class="cq-form w-form"><form')
     body = body.replace('</form>', '</form><div class="w-form-done">Thank you — your questionnaire has been received. Your account manager will be in touch to confirm next steps.</div><div class="w-form-fail">Oops! Something went wrong while submitting the form.</div></div>')
     stub = """<script>
-window.__submissions=[];document.addEventListener('DOMContentLoaded',function(){document.querySelector('form.cq-form').addEventListener('submit',function(e){e.preventDefault();var fd=new FormData(e.target);var o={};fd.forEach(function(v,k){o[k]=v});window.__submissions.push(o);document.querySelector('.w-form').querySelector('form').style.display='none';document.querySelector('.w-form-done').style.display='block';});});
+window.__submissions=[];document.addEventListener('DOMContentLoaded',function(){document.querySelector('.cq-form form').addEventListener('submit',function(e){e.preventDefault();var fd=new FormData(e.target);var o={};fd.forEach(function(v,k){o[k]=v});window.__submissions.push(o);document.querySelector('.w-form').querySelector('form').style.display='none';document.querySelector('.w-form-done').style.display='block';});});
 </script>"""
     return """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Client Questionnaire preview</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&display=swap" rel="stylesheet">

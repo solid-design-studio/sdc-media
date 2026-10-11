@@ -2,7 +2,7 @@
 (function(){
 function ready(f){if(document.readyState!=='loading'){f()}else{document.addEventListener('DOMContentLoaded',f)}}
 ready(function(){
-var form=document.querySelector('form.cq-form');if(!form)return;
+var wrap=document.querySelector('.cq-form');var form=wrap?(wrap.tagName==='FORM'?wrap:wrap.querySelector('form')):null;if(!form)return;
 var page=form.closest('.cq-page')||document.body;page.classList.add('cq-js');
 form.setAttribute('novalidate','novalidate');
 var $=function(s,r){return Array.prototype.slice.call((r||form).querySelectorAll(s))};
