@@ -16,8 +16,15 @@ on the page, and a local test harness so the questionnaire can be regenerated or
 | Form name | `Client Questionnaire — Interior & Spatial Design` (submissions appear under Forms with this name) |
 | Custom code | Page settings → Custom code. `out/head.html` is the *Head* block, `out/footer.html` is the *Before </body>* block. |
 
-Nothing else on the site was touched: no existing page, component, style or asset was
-edited. All new classes are prefixed `cq-`; all new assets are the questionnaire images.
+Apart from one addition, nothing else on the site was touched: no existing page, component,
+style or asset was edited. All new classes are prefixed `cq-`; all new assets are the questionnaire
+images.
+
+The one addition is a call-to-action band at the end of the **Contact** page (Navigator name
+"Questionnaire CTA", `out/contact-cta.html` + `out/contact-cta.css`). It is a self-contained section
+with its own `cq-cta-*` classes and breakpoint rules; its button reuses the site's existing
+`Button Primary` class and links to the questionnaire page. The shared "Let's build something great
+together" block, the contact form and the navigation are unchanged.
 
 ## What the page does
 
@@ -41,7 +48,7 @@ edited. All new classes are prefixed `cq-`; all new assets are the questionnaire
 | `build.py` | Generates the Webflow HTML/CSS, the page custom code and a standalone preview into `out/`. |
 | `assets.json` | Image file name → Webflow asset id (uploaded to the site's Assets panel). |
 | `test.js` | Playwright checks against `out/preview.html`: stepper, validation, limits, conditionals, Section 08 routing, submit payload, keyboard, mobile overflow. |
-| `out/` | Generated output. `head.html` and `footer.html` are what is on the Webflow page. |
+| `out/` | Generated output. `head.html` and `footer.html` are what is on the Webflow page; `contact-cta.*` is the Contact page band. |
 
 ## Regenerate / test locally
 
