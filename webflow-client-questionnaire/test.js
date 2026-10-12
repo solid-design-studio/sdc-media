@@ -81,8 +81,10 @@ function check(name, ok, extra) { results.push({ name, ok: !!ok, extra }); }
   const ticks = await page.$$eval('.cq-q[data-q="05-3"] .cq-opt-tick', els => els.map(e => e.getAttribute('data-opt') + (e.querySelector('img') ? ' +img' : '')));
   check('05-3 text tick options', JSON.stringify(ticks) === '["A blend of different directions","Not sure — open to exploration"]', ticks);
   check('traditional has a picture', !!(await page.$('.cq-q[data-q="05-3"] .cq-opt-img[data-opt="Traditional / Heritage-inspired"] img')));
-  const fit = await page.$eval('.cq-q[data-q="05-3"] .cq-opt-pic', e => getComputedStyle(e).objectFit + ' ' + e.style.height);
-  check('pictures not cropped', !/cover/.test(fit), fit);
+  const fit = await page.$$eval('.cq-q[data-q="05-3"] .cq-opt-pic, .cq-q[data-q="06-3"] .cq-opt-pic', els => [...new Set(els.map(e => getComputedStyle(e).objectFit))]);
+  check('pictures fitted whole, not cropped', JSON.stringify(fit) === '["contain"]', fit);
+  const sizes = await page.$$eval('.cq-q[data-q="05-3"] .cq-opt-pic', els => [...new Set(els.map(e => Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height)))]);
+  check('05-3 pictures all one size', sizes.length === 1, sizes);
   check('blend box hidden first', !(await page.$eval('.cq-other[data-for="A blend of different directions"]', e => e.classList.contains('is-on'))));
   await page.click('.cq-q[data-q="05-3"] .cq-opt[data-opt="A blend of different directions"]');
   check('blend box shown', await page.$eval('.cq-other[data-for="A blend of different directions"]', e => e.classList.contains('is-on')));

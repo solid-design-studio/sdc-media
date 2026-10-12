@@ -2,7 +2,8 @@
 # Question types:
 #   text, textarea, date, number_group
 #   single   -> radio group (options list; dict option = {"label","desc"})
-#   multi    -> checkbox group (max = "Choose up to N"; img = image cards)
+#   multi    -> checkbox group (max = "Choose up to N"; img = picture options in same-size 3:4 frames,
+#               tall = 2:3 frames; pictures are fitted whole, never cropped)
 # Options named "Other" reveal a "Please specify" text field automatically; an option with
 # "explain": <suffix> reveals a text box submitted as "<field> — <suffix>".
 # In image questions, options without an "img" render as plain tick rows under the pictures.
@@ -117,7 +118,7 @@ SECTIONS = [
                  {"label": "Not sure"},
              ]},
             {"id": "06-2", "type": "textarea", "label": "Are there any colours you strongly dislike or want to avoid?", "hint": "Optional", "field": "06.2 Colours to avoid", "rows": 3},
-            {"id": "06-3", "type": "multi", "label": "Which materials appeal to you?", "hint": SA, "field": "06.3 Materials", "img": True,
+            {"id": "06-3", "type": "multi", "label": "Which materials appeal to you?", "hint": SA, "field": "06.3 Materials", "img": True, "tall": True,
              "options": [
                  {"label": "Light timber", "img": "cq-material-light-timber.jpg"},
                  {"label": "Dark timber", "img": "cq-material-dark-timber.jpg"},

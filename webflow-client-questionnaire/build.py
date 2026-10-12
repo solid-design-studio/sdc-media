@@ -171,7 +171,7 @@ def question_html(q, number):
         if q.get("img"):
             pics = [(i, o) for i, o in opts if isinstance(o, dict) and o.get("img")]
             ticks = [(i, o) for i, o in opts if not (isinstance(o, dict) and o.get("img"))]
-            grid = "cq-options-img" + (" cq-options-swatch" if q.get("swatch") else "")
+            grid = "cq-options-img" + (" cq-options-swatch" if q.get("swatch") else "") + (" cq-options-tall" if q.get("tall") else "")
             parts.append('<div class="%s">%s</div>' % (grid, "".join(checkbox_card(q, o, i) for i, o in pics)))
             if ticks:
                 parts.append('<div class="cq-ticks">%s</div>' % "".join(checkbox_card(q, o, i) for i, o in ticks))
@@ -311,22 +311,21 @@ CSS = """
 .cq-options.cq-options-4 { grid-template-columns: repeat(4, 1fr); }
 .cq-options.cq-options-2 { grid-template-columns: repeat(2, 1fr); }
 .cq-options.cq-options-1 { grid-template-columns: 1fr; }
-.cq-options-img { columns: 3; column-gap: 20px; }
-.cq-options-img.cq-options-swatch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px 20px; }
+.cq-options-img { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px 16px; }
+.cq-options-img.cq-options-swatch { grid-template-columns: repeat(4, 1fr); gap: 24px 20px; }
 .cq-ticks { display: flex; flex-wrap: wrap; gap: 4px 32px; margin-top: 4px; }
 .cq-options.cq-options-inline { display: flex; flex-wrap: wrap; gap: 8px; }
 .cq-opt { display: flex; align-items: center; min-height: 54px; padding: 12px 16px; background-color: #F0F0F0; border: 1px solid #F0F0F0; border-radius: 6px; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease; }
 .cq-opt:hover { border-color: #111111; }
 .cq-opt.is-selected { background-color: #E8FF00; border-color: #E8FF00; }
 .cq-opt.is-disabled { opacity: 0.45; cursor: not-allowed; }
-.cq-opt.cq-opt-img { display: inline-flex; vertical-align: top; width: 100%%; flex-direction: column; align-items: stretch; min-height: 0; padding: 0; margin: 0 0 24px; gap: 10px; background-color: transparent; border: 0; border-radius: 0; break-inside: avoid; }
+.cq-opt.cq-opt-img { flex-direction: column; align-items: stretch; min-height: 0; padding: 0; gap: 10px; background-color: transparent; border: 0; border-radius: 0; }
 .cq-opt.cq-opt-img.is-selected { background-color: transparent; }
-.cq-opt.cq-opt-swatch { margin: 0; }
 .cq-opt.cq-opt-tick { min-height: 0; padding: 6px 0; background-color: transparent; border: 0; border-radius: 0; }
 .cq-opt.cq-opt-tick.is-selected { background-color: transparent; }
 .cq-opt.cq-opt-stack { flex-direction: column; align-items: stretch; padding: 16px 18px; }
 .cq-opt.cq-opt-small { min-height: 48px; padding: 10px 14px; }
-.cq-opt-pic { display: block; width: 100%%; height: auto; border-radius: 6px; outline: 3px solid transparent; outline-offset: 3px; transition: outline-color 150ms ease, opacity 150ms ease; }
+.cq-opt-pic { display: block; width: 100%%; height: auto; aspect-ratio: 3 / 4; object-fit: contain; background-color: #F0F0F0; border-radius: 6px; outline: 3px solid transparent; outline-offset: 3px; transition: outline-color 150ms ease, opacity 150ms ease; }
 .cq-opt-desc { display: block; font-size: 13px; line-height: 1.45; color: #555555; margin-top: 6px; padding-left: 30px; }
 .cq-other { margin-top: 10px; max-width: 420px; }
 .cq-other.cq-other-wide { max-width: 560px; }
@@ -353,9 +352,8 @@ CSS = """
   .cq-options { grid-template-columns: 1fr; }
   .cq-options.cq-options-4 { grid-template-columns: repeat(2, 1fr); }
   .cq-options.cq-options-2 { grid-template-columns: 1fr; }
-  .cq-options-img { columns: 2; column-gap: 14px; }
-  .cq-options-img.cq-options-swatch { grid-template-columns: repeat(3, 1fr); gap: 20px 14px; }
-  .cq-opt.cq-opt-img { margin-bottom: 20px; }
+  .cq-options-img { grid-template-columns: repeat(2, 1fr); gap: 22px 12px; }
+  .cq-options-img.cq-options-swatch { grid-template-columns: repeat(3, 1fr); gap: 20px 12px; }
   .cq-row { grid-template-columns: 1fr; }
   .cq-nav { flex-wrap: wrap; }
   .cq-progress-title { display: none; }
@@ -374,6 +372,8 @@ HEAD_CSS = """<style>
 .cq-opt .w-form-label{font-family:"Neue Montreal",sans-serif;font-size:15px;line-height:1.35;font-weight:500;color:#111111;cursor:pointer;display:block;margin:0}
 .cq-opt.cq-opt-img .w-checkbox{align-items:flex-start}
 .cq-opt.cq-opt-small .w-form-label{font-size:14px}
+.cq-options-tall .cq-opt-pic{aspect-ratio:2/3}
+.cq-opt.cq-opt-swatch .cq-opt-pic{aspect-ratio:auto;background-color:transparent}
 .cq-opt.cq-opt-img:hover .cq-opt-pic{opacity:.85}
 .cq-opt.cq-opt-img.is-selected .cq-opt-pic{outline-color:#2B36FF;opacity:1}
 .cq-opt.cq-opt-img.is-selected .w-form-label,.cq-opt.cq-opt-tick.is-selected .w-form-label{font-weight:700}
