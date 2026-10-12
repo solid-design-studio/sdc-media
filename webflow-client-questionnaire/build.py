@@ -9,6 +9,8 @@ Outputs (in ./out):
   head.html           -> page <head> custom code (Webflow form overrides + JS-driven states)
   footer.html         -> page footer custom code (stepper / conditional logic)
   preview.html        -> standalone replica of the published page for local testing
+  standalone.html     -> the hosted page; also copied to ../solid-questionnaire/index.html
+  fields.json         -> ordered field map used by the submission emails; also copied next to it
 """
 import html
 import json
@@ -23,14 +25,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "out")
 os.makedirs(OUT, exist_ok=True)
 
-ASSETS = json.load(open(os.path.join(HERE, "assets.json")))
+SITE = os.path.join(HERE, "..", "solid-questionnaire")
+# Reference images live in the public "questionnaire" bucket of the Supabase project.
+IMG_BASE = "https://bucsewbqwiljawcubyht.supabase.co/storage/v1/object/public/questionnaire/"
 
 
 def img_url(name):
-    aid = ASSETS["ids"].get(name)
-    if not aid or aid == "PENDING":
-        raise SystemExit("missing asset id for %s" % name)
-    return ASSETS["base"] + aid + "_" + name
+    return IMG_BASE + name
 
 
 def esc(s):
@@ -55,18 +56,19 @@ def checkbox_card(q, opt, idx):
     label = opt["label"] if isinstance(opt, dict) else opt
     img = opt.get("img") if isinstance(opt, dict) else None
     cls = "cq-opt"
-    if q.get("img"):
+    if img:
         cls += " cq-opt-img"
         if q.get("swatch"):
             cls += " cq-opt-swatch"
+    elif q.get("img"):
+        # options without a picture in an image question: a plain tick row, no card
+        cls += " cq-opt-tick"
     if q.get("small"):
         cls += " cq-opt-small"
     cid = "cq-%s-%d" % (slug(q["id"]), idx)
     pic = ""
     if img:
-        pic = '<img class="cq-opt-pic" src="%s" alt="%s">' % (img_url(img), esc(label))
-    elif q.get("img"):
-        pic = '<div class="cq-opt-nopic"></div>'
+        pic = '<img class="cq-opt-pic" src="%s" alt="%s" loading="lazy">' % (img_url(img), esc(label))
     # A bare checkbox inside the card: Webflow wraps it in its own label and uses the
     # input name as the visible option text.
     return ('<div class="%s" data-opt="%s">%s<input type="checkbox" id="%s" name="%s" value="Yes"></div>'
@@ -87,16 +89,29 @@ def radio_card(q, opt, idx):
     return '<div class="%s" data-opt="%s">%s</div>' % (cls, esc(label), inner)
 
 
-def other_field(q):
-    return ('<div class="cq-other"><input class="cq-input" type="text" name="%s" placeholder="Please specify">'
-            '</div>' % esc(q["field"] + " — Other"))
-
-
-def has_other(q):
+def explain_options(q):
+    """(option label, field suffix, placeholder) for every option that reveals a text box."""
+    out = []
     for o in q.get("options", []):
-        if (o["label"] if isinstance(o, dict) else o) == "Other":
-            return True
-    return False
+        label = o["label"] if isinstance(o, dict) else o
+        if label == "Other":
+            out.append(("Other", "Other", "Please specify"))
+        elif isinstance(o, dict) and o.get("explain"):
+            out.append((label, o["explain"], o.get("placeholder", "Please describe")))
+    return out
+
+
+def explain_fields(q):
+    parts = []
+    for label, suffix, placeholder in explain_options(q):
+        name = esc(q["field"] + " — " + suffix)
+        if label == "Other":
+            box = '<input class="cq-input" type="text" name="%s" placeholder="%s">' % (name, esc(placeholder))
+        else:
+            box = '<textarea class="cq-textarea" name="%s" rows="3" placeholder="%s"></textarea>' % (name, esc(placeholder))
+        parts.append('<div class="cq-other%s" data-for="%s">%s</div>' % (
+            "" if label == "Other" else " cq-other-wide", esc(label), box))
+    return "".join(parts)
 
 
 # ---------------------------------------------------------------- questions
@@ -150,20 +165,24 @@ def question_html(q, number):
             grid = "cq-options cq-options-1"
         cards = "".join(radio_card(q, o, i) for i, o in enumerate(q["options"]))
         parts.append('<div class="%s">%s</div>' % (grid, cards))
-        if has_other(q):
-            parts.append(other_field(q))
+        parts.append(explain_fields(q))
     elif t == "multi":
-        grid = "cq-options"
+        opts = list(enumerate(q["options"]))
         if q.get("img"):
-            grid += " cq-options-img"
-        elif q.get("compact"):
-            grid += " cq-options-4"
-        elif q.get("small"):
-            grid += " cq-options-2"
-        cards = "".join(checkbox_card(q, o, i) for i, o in enumerate(q["options"]))
-        parts.append('<div class="%s">%s</div>' % (grid, cards))
-        if has_other(q):
-            parts.append(other_field(q))
+            pics = [(i, o) for i, o in opts if isinstance(o, dict) and o.get("img")]
+            ticks = [(i, o) for i, o in opts if not (isinstance(o, dict) and o.get("img"))]
+            grid = "cq-options-img" + (" cq-options-swatch" if q.get("swatch") else "")
+            parts.append('<div class="%s">%s</div>' % (grid, "".join(checkbox_card(q, o, i) for i, o in pics)))
+            if ticks:
+                parts.append('<div class="cq-ticks">%s</div>' % "".join(checkbox_card(q, o, i) for i, o in ticks))
+        else:
+            grid = "cq-options"
+            if q.get("compact"):
+                grid += " cq-options-4"
+            elif q.get("small"):
+                grid += " cq-options-2"
+            parts.append('<div class="%s">%s</div>' % (grid, "".join(checkbox_card(q, o, i) for i, o in opts)))
+        parts.append(explain_fields(q))
         parts.append('<input type="hidden" name="%s" data-collect="%s" value="">' % (esc(q["field"]), q["id"]))
     else:
         raise SystemExit("unknown type " + t)
@@ -292,19 +311,25 @@ CSS = """
 .cq-options.cq-options-4 { grid-template-columns: repeat(4, 1fr); }
 .cq-options.cq-options-2 { grid-template-columns: repeat(2, 1fr); }
 .cq-options.cq-options-1 { grid-template-columns: 1fr; }
-.cq-options.cq-options-img { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.cq-options-img { columns: 3; column-gap: 20px; }
+.cq-options-img.cq-options-swatch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px 20px; }
+.cq-ticks { display: flex; flex-wrap: wrap; gap: 4px 32px; margin-top: 4px; }
 .cq-options.cq-options-inline { display: flex; flex-wrap: wrap; gap: 8px; }
 .cq-opt { display: flex; align-items: center; min-height: 54px; padding: 12px 16px; background-color: #F0F0F0; border: 1px solid #F0F0F0; border-radius: 6px; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease; }
 .cq-opt:hover { border-color: #111111; }
 .cq-opt.is-selected { background-color: #E8FF00; border-color: #E8FF00; }
 .cq-opt.is-disabled { opacity: 0.45; cursor: not-allowed; }
-.cq-opt.cq-opt-img { flex-direction: column; align-items: stretch; padding: 8px 8px 12px; gap: 10px; }
+.cq-opt.cq-opt-img { display: inline-flex; vertical-align: top; width: 100%%; flex-direction: column; align-items: stretch; min-height: 0; padding: 0; margin: 0 0 24px; gap: 10px; background-color: transparent; border: 0; border-radius: 0; break-inside: avoid; }
+.cq-opt.cq-opt-img.is-selected { background-color: transparent; }
+.cq-opt.cq-opt-swatch { margin: 0; }
+.cq-opt.cq-opt-tick { min-height: 0; padding: 6px 0; background-color: transparent; border: 0; border-radius: 0; }
+.cq-opt.cq-opt-tick.is-selected { background-color: transparent; }
 .cq-opt.cq-opt-stack { flex-direction: column; align-items: stretch; padding: 16px 18px; }
 .cq-opt.cq-opt-small { min-height: 48px; padding: 10px 14px; }
-.cq-opt-pic { display: block; width: 100%%; height: 160px; border-radius: 4px; object-fit: cover; }
-.cq-opt-nopic { display: block; width: 100%%; height: 160px; border-radius: 4px; background-color: #E6E6E6; }
+.cq-opt-pic { display: block; width: 100%%; height: auto; border-radius: 6px; outline: 3px solid transparent; outline-offset: 3px; transition: outline-color 150ms ease, opacity 150ms ease; }
 .cq-opt-desc { display: block; font-size: 13px; line-height: 1.45; color: #555555; margin-top: 6px; padding-left: 30px; }
 .cq-other { margin-top: 10px; max-width: 420px; }
+.cq-other.cq-other-wide { max-width: 560px; }
 .cq-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 8px; padding-top: 28px; border-top: 1px solid #DDDDDD; }
 .cq-nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 .cq-btn { display: inline-flex; align-items: center; justify-content: center; height: 48px; padding: 0 28px; border: 1px solid #111111; border-radius: 100px; background-color: #111111; color: #FFFFFF; font-family: %(nm)s; font-size: 12px; font-weight: 500; line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; cursor: pointer; white-space: nowrap; transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease; }
@@ -319,7 +344,6 @@ CSS = """
   .cq-h1 { font-size: 44px; }
   .cq-options { grid-template-columns: repeat(2, 1fr); }
   .cq-options.cq-options-4 { grid-template-columns: repeat(3, 1fr); }
-  .cq-options.cq-options-img { grid-template-columns: repeat(2, 1fr); }
 }
 @media screen and (max-width: 767px) {
   .cq-page { padding: 48px 20px 72px; }
@@ -329,15 +353,16 @@ CSS = """
   .cq-options { grid-template-columns: 1fr; }
   .cq-options.cq-options-4 { grid-template-columns: repeat(2, 1fr); }
   .cq-options.cq-options-2 { grid-template-columns: 1fr; }
-  .cq-options.cq-options-img { grid-template-columns: repeat(2, 1fr); }
+  .cq-options-img { columns: 2; column-gap: 14px; }
+  .cq-options-img.cq-options-swatch { grid-template-columns: repeat(3, 1fr); gap: 20px 14px; }
+  .cq-opt.cq-opt-img { margin-bottom: 20px; }
   .cq-row { grid-template-columns: 1fr; }
   .cq-nav { flex-wrap: wrap; }
   .cq-progress-title { display: none; }
 }
 @media screen and (max-width: 479px) {
   .cq-options.cq-options-4 { grid-template-columns: 1fr; }
-  .cq-options.cq-options-img { grid-template-columns: 1fr; }
-  .cq-opt-pic { height: 140px; }
+  .cq-options-img.cq-options-swatch { grid-template-columns: repeat(2, 1fr); }
   .cq-btn { padding: 0 20px; }
 }
 """ % {"ibm": IBM, "nm": NM}
@@ -349,8 +374,10 @@ HEAD_CSS = """<style>
 .cq-opt .w-form-label{font-family:"Neue Montreal",sans-serif;font-size:15px;line-height:1.35;font-weight:500;color:#111111;cursor:pointer;display:block;margin:0}
 .cq-opt.cq-opt-img .w-checkbox{align-items:flex-start}
 .cq-opt.cq-opt-small .w-form-label{font-size:14px}
-.cq-opt.cq-opt-swatch .cq-opt-pic{height:110px;object-fit:contain}
-.cq-opt.cq-opt-swatch .cq-opt-nopic{height:110px}
+.cq-opt.cq-opt-img:hover .cq-opt-pic{opacity:.85}
+.cq-opt.cq-opt-img.is-selected .cq-opt-pic{outline-color:#2B36FF;opacity:1}
+.cq-opt.cq-opt-img.is-selected .w-form-label,.cq-opt.cq-opt-tick.is-selected .w-form-label{font-weight:700}
+.cq-opt.cq-opt-tick:hover .w-form-label{text-decoration:underline;text-underline-offset:3px}
 .cq-js .cq-step{display:none}
 .cq-js .cq-step.is-active{display:block}
 .cq-js .cq-hidden{display:none!important}
@@ -387,12 +414,13 @@ function optText(i){var o=i.closest('.cq-opt');if(!o)return i.value||'';return (
 function radioVal(id){var q=form.querySelector('.cq-q[data-q="'+id+'"]');if(!q)return '';var r=q.querySelector('input[type=radio]:checked');return r?r.value:''}
 function evalShow(el){var c=el.getAttribute('data-show-if');if(!c)return true;try{c=JSON.parse(c)}catch(e){return true}var v=radioVal(c.q);if(c.equals!==undefined)return v===c.equals;if(c['in'])return c['in'].indexOf(v)>=0;return true}
 function clearInputs(root){$('input,textarea',root).forEach(function(i){if(i.type==='checkbox'||i.type==='radio'){i.checked=false;i.disabled=false}else if(i.type!=='hidden'&&i.type!=='submit'){i.value=''}else if(i.type==='hidden'){i.value=''}});$('.cq-opt',root).forEach(function(o){o.classList.remove('is-selected','is-disabled')});$('.cq-other',root).forEach(function(o){o.classList.remove('is-on')});$('.cq-count',root).forEach(function(c){c.textContent=''})}
-function compile(q){var h=q.querySelector('input[data-collect]');if(!h)return;var vals=$('input[type=checkbox]',q).filter(function(c){return c.checked}).map(optText);var o=q.querySelector('.cq-other input');var k=vals.indexOf('Other');if(k>=0&&o&&o.value.trim())vals[k]='Other: '+o.value.trim();h.value=vals.join(', ')}
+function boxFor(b){return b.getAttribute('data-for')||'Other'}
+function compile(q){var h=q.querySelector('input[data-collect]');if(!h)return;var vals=$('input[type=checkbox]',q).filter(function(c){return c.checked}).map(optText);$('.cq-other',q).forEach(function(b){var t=b.querySelector('input,textarea');var k=vals.indexOf(boxFor(b));if(k>=0&&t&&t.value.trim())vals[k]=vals[k]+': '+t.value.trim()});h.value=vals.join(', ')}
 function refresh(q){var max=parseInt(q.getAttribute('data-max')||'0',10);var boxes=$('input[type=checkbox]',q);var n=boxes.filter(function(b){return b.checked}).length;
 $('.cq-opt',q).forEach(function(o){var i=o.querySelector('input');o.classList.toggle('is-selected',!!(i&&i.checked))});
 if(max){boxes.forEach(function(b){var lim=!b.checked&&n>=max;b.disabled=lim;b.closest('.cq-opt').classList.toggle('is-disabled',lim)})}
 var cnt=q.querySelector('.cq-count');if(cnt)cnt.textContent=max?(n+' of '+max+' selected'):(n?n+' selected':'');
-var oth=q.querySelector('.cq-other');if(oth){var on=$('input:checked',q).some(function(i){return optText(i)==='Other'});oth.classList.toggle('is-on',on);if(!on){var t=oth.querySelector('input');if(t)t.value=''}}
+$('.cq-other',q).forEach(function(oth){var lab=boxFor(oth);var on=$('input:checked',q).some(function(i){return optText(i)===lab});oth.classList.toggle('is-on',on);if(!on){var t=oth.querySelector('input,textarea');if(t)t.value=''}});
 if(isMulti(q))compile(q)}
 function conditionals(){$('[data-show-if]').forEach(function(el){var show=evalShow(el);var hidden=el.classList.contains('cq-hidden');if(!show&&!hidden)clearInputs(el);el.classList.toggle('cq-hidden',!show)});
 steps.forEach(function(s){if(!s.getAttribute('data-conditional'))return;var subs=$('.cq-sub',s);var any=subs.some(function(x){return !x.classList.contains('cq-hidden')});s.classList.toggle('cq-skip',!any)})}
@@ -460,7 +488,7 @@ var wrap=document.querySelector('.cq-form');if(!wrap)return;var form=wrap.queryS
 form.addEventListener('submit',function(e){e.preventDefault();if(btn.disabled)return;
 var fd=new FormData(form);var answers={};fd.forEach(function(v,k){if(typeof v==='string')answers[k]=v});
 btn.disabled=true;var label=btn.value;btn.value='Sending\\u2026';fail.style.display='none';
-fetch('/api/client-questionnaire',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({answers:answers})})
+fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({answers:answers})})
 .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()})
 .then(function(res){try{relay(answers,res&&res.link)}catch(e){}form.style.display='none';done.style.display='block';var p=document.querySelector('.cq-progress');if(p)p.style.display='none';window.scrollTo({top:0,behavior:'smooth'})})
 .catch(function(){fail.style.display='block';btn.disabled=false;btn.value=label});
@@ -470,8 +498,24 @@ fetch('/api/client-questionnaire',{method:'POST',headers:{'Content-Type':'applic
 </script>"""
 
 
+RELAY_JS = """<script>
+/* Emails each submission to the team through FormSubmit (formsubmit.co), approved by Solid on 12 Oct 2026.
+   No keys: the first message asks design@ to click "Activate Form" once. */
+function relay(answers,link){
+  var to='design@solid2017.com', cc='fatimah@solid2017.com,hello@solid2017.com';
+  var name=(answers['01.1 Project / Brand Name']||'Untitled project').trim();
+  var type=(answers['01.5 Project type']||'').trim();
+  var p={_subject:'New client questionnaire: '+name+(type?' ('+type+')':''),_cc:cc,_template:'table',_captcha:'false',
+    'Project':name,'Project type':type,'Contact':answers['01.2 Primary Contact']||'','Location':answers['01.3 Project Location / Venue']||'',
+    'Full answers (private link)':link||'See the team inbox'};
+  Object.keys(answers).forEach(function(k){var v=answers[k];if(typeof v==='string'&&v.trim()&&!(k in p))p[k]=v.trim()});
+  fetch('https://formsubmit.co/ajax/'+to,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(p),keepalive:true}).catch(function(){});
+}
+</script>"""
+
+
 def standalone_html(steps, shell, nav):
-    """A self-contained page for hosting outside Webflow (consultation.solid2017.com)."""
+    """The hosted page (questionnaire.solid2017.com, project ../solid-questionnaire)."""
     body = shell.replace('<div class="cq-steps"></div>', '<div class="cq-steps">%s</div>%s' % ("".join(steps), nav))
     body = webflowify(body)
     body = body.replace('<form class="cq-form"', '<div class="cq-form w-form"><form')
@@ -490,10 +534,35 @@ def standalone_html(steps, shell, nav):
 <meta name="robots" content="noindex,nofollow"><meta name="description" content="Solid Design Studio client questionnaire for interior and spatial design projects.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-<style>%s%s</style>%s%s%s</head><body>
+<style>%s%s</style>%s%s%s%s</head><body>
 <div class="cq-topbar"><a href="https://www.solid2017.com" aria-label="Solid Design Studio"><img src="/solid-logo.svg" alt="Solid"></a></div>
 %s
-</body></html>""" % (base, CSS.replace("'Ibm Plex Sans'", "'IBM Plex Sans'"), HEAD_CSS, JS, SUBMIT_JS, body)
+</body></html>""" % (base, CSS.replace("'Ibm Plex Sans'", "'IBM Plex Sans'"), HEAD_CSS, JS, SUBMIT_JS, RELAY_JS, body)
+
+
+def fields_map():
+    """Ordered field map ({sections, fields}) the server uses to lay out submission emails and pages."""
+    sections, fields = [], []
+
+    def add_questions(code, title, questions):
+        for q in questions:
+            if q["type"] == "number_group":
+                for sub_label, field in q["fields"]:
+                    fields.append({"key": field, "label": "%s — %s" % (q["label"], sub_label), "section": code, "sectionTitle": title})
+                continue
+            fields.append({"key": q["field"], "label": q["label"], "section": code, "sectionTitle": title})
+            for label, suffix, _ in explain_options(q):
+                fields.append({"key": q["field"] + " — " + suffix, "label": "%s (%s)" % (q["label"], label),
+                               "section": code, "sectionTitle": title})
+
+    for sec in SECTIONS:
+        sections.append({"code": sec["num"], "title": sec["title"]})
+        add_questions(sec["num"], sec["title"], sec.get("questions", []))
+        for sub in sec.get("subsections", []):
+            code, title = sec["num"] + sub["key"], "%s — %s" % (sec["title"], sub["title"])
+            sections.append({"code": code, "title": title})
+            add_questions(code, title, sub["questions"])
+    return {"sections": sections, "fields": fields}
 
 
 def main():
@@ -519,7 +588,13 @@ def main():
     open(os.path.join(OUT, "head.html"), "w").write(HEAD_CSS)
     open(os.path.join(OUT, "footer.html"), "w").write(JS)
     open(os.path.join(OUT, "preview.html"), "w").write(preview_html(steps, shell, nav))
-    open(os.path.join(OUT, "standalone.html"), "w").write(standalone_html(steps, shell, nav))
+    page = standalone_html(steps, shell, nav)
+    fmap = json.dumps(fields_map(), indent=2, ensure_ascii=False) + "\n"
+    open(os.path.join(OUT, "standalone.html"), "w").write(page)
+    open(os.path.join(OUT, "fields.json"), "w").write(fmap)
+    if os.path.isdir(SITE):
+        open(os.path.join(SITE, "index.html"), "w").write(page)
+        open(os.path.join(SITE, "fields.json"), "w").write(fmap)
     print("shell %d chars, nav %d, css %d, head %d, footer %d" % (len(shell), len(nav), len(CSS), len(HEAD_CSS), len(JS)))
     for sec, s in zip(SECTIONS, steps):
         print("step %s: %d chars" % (sec["num"], len(s)))

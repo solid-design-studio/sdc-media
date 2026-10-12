@@ -3,7 +3,9 @@
 #   text, textarea, date, number_group
 #   single   -> radio group (options list; dict option = {"label","desc"})
 #   multi    -> checkbox group (max = "Choose up to N"; img = image cards)
-# Options named "Other" reveal a "Please specify" text field automatically.
+# Options named "Other" reveal a "Please specify" text field automatically; an option with
+# "explain": <suffix> reveals a text box submitted as "<field> — <suffix>".
+# In image questions, options without an "img" render as plain tick rows under the pictures.
 # show_if: {"q": <question id>, "equals": "..."} or {"q": ..., "in": [...]}
 
 INTRO = [
@@ -91,8 +93,9 @@ SECTIONS = [
                  {"label": "Eclectic / Expressive", "img": "cq-style-eclectic-expressive.jpg"},
                  {"label": "Raw / Material-led", "img": "cq-style-raw-material-led.jpg"},
                  {"label": "Futuristic", "img": "cq-style-futuristic.jpg"},
-                 {"label": "Traditional / Heritage-inspired"},
-                 {"label": "A blend of different directions"},
+                 {"label": "Traditional / Heritage-inspired", "img": "cq-style-traditional-heritage.jpg"},
+                 {"label": "A blend of different directions", "explain": "Blend",
+                  "placeholder": "Tell us which directions you would combine, e.g. warm minimalism with heritage details"},
                  {"label": "Not sure — open to exploration"},
              ]},
         ],

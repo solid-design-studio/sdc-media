@@ -16,12 +16,13 @@ function optText(i){var o=i.closest('.cq-opt');if(!o)return i.value||'';return (
 function radioVal(id){var q=form.querySelector('.cq-q[data-q="'+id+'"]');if(!q)return '';var r=q.querySelector('input[type=radio]:checked');return r?r.value:''}
 function evalShow(el){var c=el.getAttribute('data-show-if');if(!c)return true;try{c=JSON.parse(c)}catch(e){return true}var v=radioVal(c.q);if(c.equals!==undefined)return v===c.equals;if(c['in'])return c['in'].indexOf(v)>=0;return true}
 function clearInputs(root){$('input,textarea',root).forEach(function(i){if(i.type==='checkbox'||i.type==='radio'){i.checked=false;i.disabled=false}else if(i.type!=='hidden'&&i.type!=='submit'){i.value=''}else if(i.type==='hidden'){i.value=''}});$('.cq-opt',root).forEach(function(o){o.classList.remove('is-selected','is-disabled')});$('.cq-other',root).forEach(function(o){o.classList.remove('is-on')});$('.cq-count',root).forEach(function(c){c.textContent=''})}
-function compile(q){var h=q.querySelector('input[data-collect]');if(!h)return;var vals=$('input[type=checkbox]',q).filter(function(c){return c.checked}).map(optText);var o=q.querySelector('.cq-other input');var k=vals.indexOf('Other');if(k>=0&&o&&o.value.trim())vals[k]='Other: '+o.value.trim();h.value=vals.join(', ')}
+function boxFor(b){return b.getAttribute('data-for')||'Other'}
+function compile(q){var h=q.querySelector('input[data-collect]');if(!h)return;var vals=$('input[type=checkbox]',q).filter(function(c){return c.checked}).map(optText);$('.cq-other',q).forEach(function(b){var t=b.querySelector('input,textarea');var k=vals.indexOf(boxFor(b));if(k>=0&&t&&t.value.trim())vals[k]=vals[k]+': '+t.value.trim()});h.value=vals.join(', ')}
 function refresh(q){var max=parseInt(q.getAttribute('data-max')||'0',10);var boxes=$('input[type=checkbox]',q);var n=boxes.filter(function(b){return b.checked}).length;
 $('.cq-opt',q).forEach(function(o){var i=o.querySelector('input');o.classList.toggle('is-selected',!!(i&&i.checked))});
 if(max){boxes.forEach(function(b){var lim=!b.checked&&n>=max;b.disabled=lim;b.closest('.cq-opt').classList.toggle('is-disabled',lim)})}
 var cnt=q.querySelector('.cq-count');if(cnt)cnt.textContent=max?(n+' of '+max+' selected'):(n?n+' selected':'');
-var oth=q.querySelector('.cq-other');if(oth){var on=$('input:checked',q).some(function(i){return optText(i)==='Other'});oth.classList.toggle('is-on',on);if(!on){var t=oth.querySelector('input');if(t)t.value=''}}
+$('.cq-other',q).forEach(function(oth){var lab=boxFor(oth);var on=$('input:checked',q).some(function(i){return optText(i)===lab});oth.classList.toggle('is-on',on);if(!on){var t=oth.querySelector('input,textarea');if(t)t.value=''}});
 if(isMulti(q))compile(q)}
 function conditionals(){$('[data-show-if]').forEach(function(el){var show=evalShow(el);var hidden=el.classList.contains('cq-hidden');if(!show&&!hidden)clearInputs(el);el.classList.toggle('cq-hidden',!show)});
 steps.forEach(function(s){if(!s.getAttribute('data-conditional'))return;var subs=$('.cq-sub',s);var any=subs.some(function(x){return !x.classList.contains('cq-hidden')});s.classList.toggle('cq-skip',!any)})}

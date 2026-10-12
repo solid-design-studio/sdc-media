@@ -45,8 +45,7 @@ together" block, the contact form and the navigation are unchanged.
 | File | Purpose |
 | --- | --- |
 | `spec.py` | The questionnaire content: every section, question, option, help text, limits, images and conditional rules. Edit this to change wording or options. |
-| `build.py` | Generates the Webflow HTML/CSS, the page custom code and a standalone preview into `out/`. |
-| `assets.json` | Image file name → Webflow asset id (uploaded to the site's Assets panel). |
+| `build.py` | Generates the HTML/CSS/JS into `out/` and writes the hosted page and field map straight into `../solid-questionnaire/` (`index.html`, `fields.json`). Images come from the Supabase `questionnaire` bucket. |
 | `test.js` | Playwright checks against `out/preview.html`: stepper, validation, limits, conditionals, Section 08 routing, submit payload, keyboard, mobile overflow. |
 | `out/` | Generated output. `head.html` and `footer.html` are what is on the Webflow page; `contact-cta.*` is the Contact page band. |
 

@@ -77,6 +77,16 @@ function check(name, ok, extra) { results.push({ name, ok: !!ok, extra }); }
   await page.click('[data-nav=next]'); await page.waitForTimeout(150);
   await page.click('.cq-q[data-q="05-3"] .cq-opt[data-opt="Modern Luxury"]');
   await page.click('.cq-q[data-q="05-3"] .cq-opt[data-opt="Warm Minimalism"]');
+  check('no picture placeholders', (await page.$$('.cq-opt-nopic')).length === 0);
+  const ticks = await page.$$eval('.cq-q[data-q="05-3"] .cq-opt-tick', els => els.map(e => e.getAttribute('data-opt') + (e.querySelector('img') ? ' +img' : '')));
+  check('05-3 text tick options', JSON.stringify(ticks) === '["A blend of different directions","Not sure — open to exploration"]', ticks);
+  check('traditional has a picture', !!(await page.$('.cq-q[data-q="05-3"] .cq-opt-img[data-opt="Traditional / Heritage-inspired"] img')));
+  const fit = await page.$eval('.cq-q[data-q="05-3"] .cq-opt-pic', e => getComputedStyle(e).objectFit + ' ' + e.style.height);
+  check('pictures not cropped', !/cover/.test(fit), fit);
+  check('blend box hidden first', !(await page.$eval('.cq-other[data-for="A blend of different directions"]', e => e.classList.contains('is-on'))));
+  await page.click('.cq-q[data-q="05-3"] .cq-opt[data-opt="A blend of different directions"]');
+  check('blend box shown', await page.$eval('.cq-other[data-for="A blend of different directions"]', e => e.classList.contains('is-on')));
+  await page.fill('textarea[name="05.3 Creative direction — Blend"]', 'Warm minimal with heritage arches');
   await page.screenshot({ path: path.join(SHOTS, 'd-05.png'), fullPage: true });
   await page.click('[data-nav=next]'); await page.waitForTimeout(150);
   check('step 06', (await active()) === '06');
@@ -84,6 +94,11 @@ function check(name, ok, extra) { results.push({ name, ok: !!ok, extra }); }
   await page.click('.cq-q[data-q="06-5"] .cq-opt[data-opt="Yes"]'); await page.waitForTimeout(100);
   check('06-5b + 06-7 shown', !(await page.$eval('.cq-q[data-q="06-5b"]', e => e.classList.contains('cq-hidden'))) && !(await page.$eval('.cq-q[data-q="06-7"]', e => e.classList.contains('cq-hidden'))));
   await page.click('.cq-q[data-q="06-1"] .cq-opt[data-opt="Warm neutrals"]');
+  const ticks6 = await page.$$eval('.cq-q[data-q="06-1"] .cq-opt-tick', els => els.map(e => e.getAttribute('data-opt')));
+  check('06-1 Other / Not sure are text ticks', JSON.stringify(ticks6) === '["Other","Not sure"]', ticks6);
+  await page.click('.cq-q[data-q="06-1"] .cq-opt[data-opt="Other"]');
+  check('06-1 other box shown', await page.$eval('.cq-q[data-q="06-1"] .cq-other[data-for="Other"]', e => e.classList.contains('is-on')));
+  await page.fill('input[name="06.1 Colour direction — Other"]', 'Sage green');
   await page.click('.cq-q[data-q="06-3"] .cq-opt[data-opt="Terrazzo"]');
   await page.screenshot({ path: path.join(SHOTS, 'd-06.png'), fullPage: true });
   await page.click('[data-nav=next]'); await page.waitForTimeout(150);
@@ -112,7 +127,8 @@ function check(name, ok, extra) { results.push({ name, ok: !!ok, extra }); }
   check('payload 01.5 radio', payload['01.5 Project type'] === 'F&B / Restaurant / Café', payload['01.5 Project type']);
   check('payload 02.2 goals', payload['02.2 Main goals'] === 'Improve functionality, Launching a new brand, Improve customer / visitor experience', payload['02.2 Main goals']);
   check('payload 03.1', payload['03.1 Level of change'] === 'Noticeable Transformation');
-  check('payload 05.3', payload['05.3 Creative direction'] === 'Warm Minimalism, Modern Luxury', payload['05.3 Creative direction']);
+  check('payload 05.3', payload['05.3 Creative direction'] === 'Warm Minimalism, Modern Luxury, A blend of different directions: Warm minimal with heritage arches', payload['05.3 Creative direction']);
+  check('payload 06.1 other', payload['06.1 Colour direction'] === 'Warm neutrals, Other: Sage green', payload['06.1 Colour direction']);
   check('payload 08A.1', payload['08A.1 F&B concept'] === 'Café');
   check('payload 08A.3 indoor', payload['08A.3 Seating — Indoor'] === '40');
   check('payload 08A.4', payload['08A.4 Zones required'] === 'Coffee Bar');
