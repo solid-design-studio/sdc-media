@@ -59,5 +59,5 @@ module.exports = async (req, res) => {
   } else {
     console.error("submission stored but nobody was notified (no Google credentials?)", row.id);
   }
-  return res.status(200).json({ id: row.id });
+  return res.status(200).json({ id: row.id, link });
 };

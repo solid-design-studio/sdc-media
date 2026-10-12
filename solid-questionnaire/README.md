@@ -15,3 +15,5 @@ Notifications: the simplest setup is a Gmail app password for hello@ (`GMAIL_USE
 `GOOGLE_REFRESH_TOKEN`, the same OAuth client as consultation.solid2017.com). With the Gmail send scope the
 team gets an email (`NOTIFY_TO`); with a calendar-only grant it gets a calendar invite instead
 (`CALENDAR_INVITEES`). Without credentials, submissions are still stored and visible in the inbox.
+
+Email: each submission is also emailed to design@ (cc fatimah@, hello@) from the page through FormSubmit (formsubmit.co, free, no keys). design@ must click "Activate Form" in FormSubmit's first email once. Approved by Solid on 12 Oct 2026.

@@ -453,6 +453,49 @@ window.__submissions=[];document.addEventListener('DOMContentLoaded',function(){
 </body></html>""" % (CSS.replace("'Ibm Plex Sans'", "'IBM Plex Sans'"), HEAD_CSS, JS, stub, body)
 
 
+SUBMIT_JS = """<script>
+(function(){
+document.addEventListener('DOMContentLoaded',function(){
+var wrap=document.querySelector('.cq-form');if(!wrap)return;var form=wrap.querySelector('form');var done=wrap.querySelector('.w-form-done');var fail=wrap.querySelector('.w-form-fail');var btn=form.querySelector('.cq-btn-submit');
+form.addEventListener('submit',function(e){e.preventDefault();if(btn.disabled)return;
+var fd=new FormData(form);var answers={};fd.forEach(function(v,k){if(typeof v==='string')answers[k]=v});
+btn.disabled=true;var label=btn.value;btn.value='Sending\\u2026';fail.style.display='none';
+fetch('/api/client-questionnaire',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({answers:answers})})
+.then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()})
+.then(function(res){try{relay(answers,res&&res.link)}catch(e){}form.style.display='none';done.style.display='block';var p=document.querySelector('.cq-progress');if(p)p.style.display='none';window.scrollTo({top:0,behavior:'smooth'})})
+.catch(function(){fail.style.display='block';btn.disabled=false;btn.value=label});
+});
+});
+})();
+</script>"""
+
+
+def standalone_html(steps, shell, nav):
+    """A self-contained page for hosting outside Webflow (consultation.solid2017.com)."""
+    body = shell.replace('<div class="cq-steps"></div>', '<div class="cq-steps">%s</div>%s' % ("".join(steps), nav))
+    body = webflowify(body)
+    body = body.replace('<form class="cq-form"', '<div class="cq-form w-form"><form')
+    body = re.sub(r' data-type="[a-z_]+"', '', body)
+    body = body.replace('</form>', '</form><div class="w-form-done"><p class="cq-done">Thank you — your questionnaire has been received. Your account manager will be in touch to confirm the next steps.</p></div><div class="w-form-fail">Something went wrong while sending your answers. Please check your connection and try again; nothing you entered has been lost.</div></div>')
+    base = """body{margin:0;font-family:'Neue Montreal',Arial,sans-serif;background:#FAFAFA;color:#333;font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}*{box-sizing:border-box}
+@font-face{font-family:'Neue Montreal';src:url('/fonts/NeueMontreal-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Neue Montreal';src:url('/fonts/NeueMontreal-Medium.woff2') format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:'Neue Montreal';src:url('/fonts/NeueMontreal-Bold.woff2') format('woff2');font-weight:700;font-display:swap}
+.w-checkbox,.w-radio{display:block;margin-bottom:5px;padding-left:20px}.w-checkbox-input,.w-radio-input{float:left;margin:4px 0 0 -20px;line-height:normal}.w-form-label{display:inline-block;cursor:pointer;font-weight:normal;margin-bottom:0}
+.w-input,.w-button{font-family:inherit}.w-form-done,.w-form-fail{display:none}.w-form-fail{margin-top:16px;padding:14px 16px;border-radius:6px;background:#FDE8E8;color:#8A1C1C;font-size:14px;line-height:1.45}
+.cq-topbar{background:#111111;height:64px;display:flex;align-items:center;padding:0 32px}.cq-topbar img{height:22px;width:auto;display:block}
+@media (max-width:767px){.cq-topbar{padding:0 24px;height:60px}}
+"""
+    return """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Client Questionnaire · Solid</title>
+<meta name="robots" content="noindex,nofollow"><meta name="description" content="Solid Design Studio client questionnaire for interior and spatial design projects.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>%s%s</style>%s%s%s</head><body>
+<div class="cq-topbar"><a href="https://www.solid2017.com" aria-label="Solid Design Studio"><img src="/solid-logo.svg" alt="Solid"></a></div>
+%s
+</body></html>""" % (base, CSS.replace("'Ibm Plex Sans'", "'IBM Plex Sans'"), HEAD_CSS, JS, SUBMIT_JS, body)
+
+
 def main():
     shell = shell_html()
     nav = nav_html()
@@ -476,6 +519,7 @@ def main():
     open(os.path.join(OUT, "head.html"), "w").write(HEAD_CSS)
     open(os.path.join(OUT, "footer.html"), "w").write(JS)
     open(os.path.join(OUT, "preview.html"), "w").write(preview_html(steps, shell, nav))
+    open(os.path.join(OUT, "standalone.html"), "w").write(standalone_html(steps, shell, nav))
     print("shell %d chars, nav %d, css %d, head %d, footer %d" % (len(shell), len(nav), len(CSS), len(HEAD_CSS), len(JS)))
     for sec, s in zip(SECTIONS, steps):
         print("step %s: %d chars" % (sec["num"], len(s)))
