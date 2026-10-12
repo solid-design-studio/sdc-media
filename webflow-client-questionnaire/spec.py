@@ -8,6 +8,10 @@
 # "explain": <suffix> reveals a text box submitted as "<field> — <suffix>".
 # In image questions, options without an "img" render as plain tick rows under the pictures.
 # show_if: {"q": <question id>, "equals": "..."} or {"q": ..., "in": [...]}
+# textarea + upload -> a file upload box above the text box; uploads are stored privately and submitted
+#                      as "<files_field>" (one storage path per line).
+# checklist        -> multi rendered as a ticklist panel with an "n of N ticked" count.
+# Options starting with "Not sure" are coloured differently from the other options.
 
 INTRO = [
     "This questionnaire helps us understand what you need from the project, the level of change you are looking for, and the practical and creative requirements we need to consider before design begins.",
@@ -134,17 +138,20 @@ SECTIONS = [
                  {"label": "Not sure"},
              ]},
             {"id": "06-4", "type": "single", "label": "Are there any materials or finishes you strongly dislike or want to avoid?", "field": "06.4 Materials to avoid", "inline": True, "options": ["Yes", "No"]},
-            {"id": "06-4b", "type": "textarea", "label": "If yes, please upload or share links.", "field": "06.4 Materials to avoid — links / notes", "follow": True, "rows": 3,
-             "help": "Paste links (Pinterest, Google Drive, Dropbox, WeTransfer…) or describe them. Files can also be sent directly to your account manager.",
+            {"id": "06-4b", "type": "textarea", "label": "If yes, please upload files or share links.", "field": "06.4 Materials to avoid — links / notes", "follow": True, "rows": 3,
+             "upload": True, "files_field": "06.4 Materials to avoid — Files", "links_label": "Links or notes (optional)",
+             "help": "Upload files above, or paste links (Pinterest, Google Drive, Dropbox, WeTransfer…) and describe them. Up to 50 MB per file.",
              "show_if": {"q": "06-4", "equals": "Yes"}},
             {"id": "06-5", "type": "single", "label": "Do you have visual references you would like to share?", "field": "06.5 Visual references", "inline": True, "options": ["Yes", "No"],
              "note": "References can include interiors, retail spaces, restaurants, materials, furniture, art, architecture, fashion, branding or anything else that reflects the direction you like."},
-            {"id": "06-5b", "type": "textarea", "label": "If yes, please upload or share links.", "field": "06.5 Visual references — links", "follow": True, "rows": 3,
-             "help": "Paste links (Pinterest, Google Drive, Dropbox, WeTransfer…). Files can also be sent directly to your account manager.",
+            {"id": "06-5b", "type": "textarea", "label": "If yes, please upload files or share links.", "field": "06.5 Visual references — links", "follow": True, "rows": 3,
+             "upload": True, "files_field": "06.5 Visual references — Files", "links_label": "Links (optional)",
+             "help": "Upload files above, or paste links (Pinterest, Google Drive, Dropbox, WeTransfer…). Up to 50 MB per file.",
              "show_if": {"q": "06-5", "equals": "Yes"}},
             {"id": "06-6", "type": "single", "label": "Do you have examples of spaces or directions you do NOT want?", "field": "06.6 Examples NOT wanted", "inline": True, "options": ["Yes", "No"]},
-            {"id": "06-6b", "type": "textarea", "label": "If yes, please upload or share links.", "field": "06.6 Examples NOT wanted — links", "follow": True, "rows": 3,
-             "help": "Paste links (Pinterest, Google Drive, Dropbox, WeTransfer…). Files can also be sent directly to your account manager.",
+            {"id": "06-6b", "type": "textarea", "label": "If yes, please upload files or share links.", "field": "06.6 Examples NOT wanted — links", "follow": True, "rows": 3,
+             "upload": True, "files_field": "06.6 Examples NOT wanted — Files", "links_label": "Links (optional)",
+             "help": "Upload files above, or paste links (Pinterest, Google Drive, Dropbox, WeTransfer…). Up to 50 MB per file.",
              "show_if": {"q": "06-6", "equals": "Yes"}},
             {"id": "06-7", "type": "multi", "label": "What do you like about the references you shared?", "hint": up_to(4), "max": 4, "field": "06.7 Liked about references",
              "show_if": {"q": "06-5", "equals": "Yes"},
@@ -263,15 +270,20 @@ SECTIONS = [
     },
     {
         "num": "11", "title": "Before We Begin", "tag": "11 — BEFORE WE BEGIN",
-        "intro": "Please make sure to hand over to your account manager any information that is currently available.",
-        "hint": "Tick the items you can provide:",
+        "intro": "This checklist shows us which information you already have, so we know what to ask for.",
+        "callout": ["Tick every item you can send us.",
+                    "Leave anything you don’t have yet unticked. You can upload files at the bottom of this page, or send them to your account manager later."],
         "questions": [
-            {"id": "11-1", "type": "multi", "label": "Brand & Creative", "field": "11.1 Handover — Brand & Creative", "small": True,
+            {"id": "11-1", "type": "multi", "checklist": True, "hint": "Tick what you can provide", "label": "Brand & Creative", "field": "11.1 Handover — Brand & Creative", "small": True,
              "options": ["Brand Guidelines", "Logo Files", "Existing Brand Assets", "Reference Images / Pinterest Board", "Previous Design Proposals", "Other Relevant Visual References"]},
-            {"id": "11-2", "type": "multi", "label": "Space & Technical", "field": "11.2 Handover — Space & Technical", "small": True,
+            {"id": "11-2", "type": "multi", "checklist": True, "hint": "Tick what you can provide", "label": "Space & Technical", "field": "11.2 Handover — Space & Technical", "small": True,
              "options": ["Latest CAD / PDF Plans", "Site Photos / Videos", "Architectural Drawings", "Lease / Landlord Plan", "Mall / Venue Technical Manual", "Existing MEP / Ceiling Drawings", "Equipment Schedule & Dimensions", "Kitchen Consultant Drawings", "Product / Merchandising Requirements"]},
-            {"id": "11-3", "type": "multi", "label": "Project", "field": "11.3 Handover — Project", "small": True,
+            {"id": "11-3", "type": "multi", "checklist": True, "hint": "Tick what you can provide", "label": "Project", "field": "11.3 Handover — Project", "small": True,
              "options": ["Budget Information", "Required Launch / Opening Programme", "Any Relevant Project Documentation"]},
+            {"id": "11-4", "type": "textarea", "label": "Have some of these ready? Upload them now", "hint": "Optional", "field": "11.4 Handover — links / notes", "rows": 3,
+             "upload": True, "files_field": "11.4 Handover — Files", "links_label": "Links or notes (optional)",
+             "placeholder": "Paste links (Google Drive, Dropbox, WeTransfer…) or add a note",
+             "help": "Up to 50 MB per file. Larger files can be shared as a link or sent to your account manager."},
         ],
     },
     {

@@ -1,9 +1,27 @@
 {
   "rewrites": [
-    { "source": "/s/:id", "destination": "/api/view?id=:id" },
-    { "source": "/inbox", "destination": "/api/inbox" }
+    {
+      "source": "/s/:id",
+      "destination": "/api/view?id=:id"
+    },
+    {
+      "source": "/inbox",
+      "destination": "/api/inbox"
+    },
+    {
+      "source": "/f",
+      "destination": "https://bucsewbqwiljawcubyht.supabase.co/functions/v1/questionnaire-files"
+    }
   ],
   "headers": [
-    { "source": "/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
   ]
 }

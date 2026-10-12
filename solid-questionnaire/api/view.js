@@ -22,5 +22,5 @@ module.exports = async (req, res) => {
   if (!rows || !rows.length) {
     return res.status(404).end(page("Not found", "<h1>Not found</h1><p class=\"meta\">This link is not valid.</p>"));
   }
-  return res.status(200).end(page("Questionnaire · " + (rows[0].project_name || "Submission"), formatHtml(rows[0])));
+  return res.status(200).end(page("Questionnaire · " + (rows[0].project_name || "Submission"), formatHtml(rows[0], token)));
 };

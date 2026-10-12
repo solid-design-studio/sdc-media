@@ -284,7 +284,13 @@
     },
     {
       "key": "06.4 Materials to avoid — links / notes",
-      "label": "If yes, please upload or share links.",
+      "label": "If yes, please upload files or share links.",
+      "section": "06",
+      "sectionTitle": "Colour, Materials & Visual References"
+    },
+    {
+      "key": "06.4 Materials to avoid — Files",
+      "label": "If yes, please upload files or share links. (uploaded files)",
       "section": "06",
       "sectionTitle": "Colour, Materials & Visual References"
     },
@@ -296,7 +302,13 @@
     },
     {
       "key": "06.5 Visual references — links",
-      "label": "If yes, please upload or share links.",
+      "label": "If yes, please upload files or share links.",
+      "section": "06",
+      "sectionTitle": "Colour, Materials & Visual References"
+    },
+    {
+      "key": "06.5 Visual references — Files",
+      "label": "If yes, please upload files or share links. (uploaded files)",
       "section": "06",
       "sectionTitle": "Colour, Materials & Visual References"
     },
@@ -308,7 +320,13 @@
     },
     {
       "key": "06.6 Examples NOT wanted — links",
-      "label": "If yes, please upload or share links.",
+      "label": "If yes, please upload files or share links.",
+      "section": "06",
+      "sectionTitle": "Colour, Materials & Visual References"
+    },
+    {
+      "key": "06.6 Examples NOT wanted — Files",
+      "label": "If yes, please upload files or share links. (uploaded files)",
       "section": "06",
       "sectionTitle": "Colour, Materials & Visual References"
     },
@@ -729,6 +747,18 @@
     {
       "key": "11.3 Handover — Project",
       "label": "Project",
+      "section": "11",
+      "sectionTitle": "Before We Begin"
+    },
+    {
+      "key": "11.4 Handover — links / notes",
+      "label": "Have some of these ready? Upload them now",
+      "section": "11",
+      "sectionTitle": "Before We Begin"
+    },
+    {
+      "key": "11.4 Handover — Files",
+      "label": "Have some of these ready? Upload them now (uploaded files)",
       "section": "11",
       "sectionTitle": "Before We Begin"
     },

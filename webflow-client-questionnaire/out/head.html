@@ -8,8 +8,18 @@
 .cq-opt.cq-opt-swatch .cq-opt-pic{aspect-ratio:auto;background-color:transparent}
 .cq-opt.cq-opt-img:hover .cq-opt-pic{opacity:.85}
 .cq-opt.cq-opt-img.is-selected .cq-opt-pic{outline-color:#2B36FF;opacity:1}
-.cq-opt.cq-opt-img.is-selected .w-form-label,.cq-opt.cq-opt-tick.is-selected .w-form-label{font-weight:700}
-.cq-opt.cq-opt-tick:hover .w-form-label{text-decoration:underline;text-underline-offset:3px}
+.cq-opt.cq-opt-img.is-selected .w-form-label,.cq-opt.cq-opt-check.is-selected .w-form-label{font-weight:700}
+.cq-opt.cq-opt-unsure .w-form-label{color:#2B36FF}
+.cq-opt.cq-opt-unsure.is-selected .w-form-label{color:#FFFFFF}
+.cq-opt.cq-opt-unsure.is-selected .w-checkbox-input,.cq-opt.cq-opt-unsure.is-selected .w-radio-input{accent-color:#111111}
+.cq-opt.cq-opt-check .w-checkbox-input{width:20px;height:20px}
+.cq-opt.cq-opt-check:hover .w-form-label{text-decoration:underline;text-underline-offset:3px}
+.cq-q[data-check] .cq-count{color:#2B36FF}
+.cq-drop input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.cq-file.is-done .cq-file-state{color:#111111}
+.cq-file.is-done .cq-file-state::before{content:"¹3  "}
+.cq-file.is-err{background:#FDE8E8}.cq-file.is-err .cq-file-state{color:#8A1C1C}
+.cq-callout strong{font-weight:700}
 .cq-js .cq-step{display:none}
 .cq-js .cq-step.is-active{display:block}
 .cq-js .cq-hidden{display:none!important}

@@ -68,14 +68,14 @@ function groupAnswers(answers) {
       if (f.section !== sec.code) continue;
       const v = answers[f.key];
       seen.add(f.key);
-      if (typeof v === "string" && v.trim()) items.push({ label: f.label, value: v.trim() });
+      if (typeof v === "string" && v.trim()) items.push({ key: f.key, label: f.label, value: v.trim() });
     }
     if (items.length) groups.push({ code: sec.code, title: sec.title, items });
   }
   // Anything the page sent that the map does not know (should not happen; kept rather than dropped).
   const extra = Object.keys(answers)
     .filter((k) => !seen.has(k) && typeof answers[k] === "string" && answers[k].trim())
-    .map((k) => ({ label: k, value: answers[k].trim() }));
+    .map((k) => ({ key: k, label: k, value: answers[k].trim() }));
   if (extra.length) groups.push({ code: "", title: "Other fields", items: extra });
   return groups;
 }
@@ -138,13 +138,31 @@ function page(title, body) {
   );
 }
 
-function formatHtml(sub) {
+const FILES_SUFFIX = " — Files";
+
+/** Uploaded files are stored privately; links go through /f, which checks this submission's token. */
+function fileLinks(value, id, token) {
+  return value
+    .split("\n")
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => {
+      const href = "/f?id=" + encodeURIComponent(id) + "&t=" + encodeURIComponent(token) + "&p=" + encodeURIComponent(p);
+      return '<a href="' + escapeHtml(href) + '">' + escapeHtml(p.split("/").pop()) + "</a>";
+    })
+    .join("<br>");
+}
+
+function formatHtml(sub, token) {
   let out = '<p class="kicker">Client questionnaire · Interior &amp; Spatial Design</p>';
   out += "<h1>" + escapeHtml(summaryLine(sub.answers)) + "</h1>";
   out += '<p class="meta">Received ' + escapeHtml(new Date(sub.created_at).toUTCString().replace("GMT", "UTC")) + "</p>";
   for (const g of groupAnswers(sub.answers)) {
     out += "<h2>" + escapeHtml((g.code ? g.code + " · " : "") + g.title) + "</h2><dl>";
-    for (const it of g.items) out += "<dt>" + escapeHtml(it.label) + "</dt><dd>" + escapeHtml(it.value) + "</dd>";
+    for (const it of g.items) {
+      const isFiles = it.key.endsWith(FILES_SUFFIX) && token;
+      out += "<dt>" + escapeHtml(it.label) + "</dt><dd>" + (isFiles ? fileLinks(it.value, sub.id, token) : escapeHtml(it.value)) + "</dd>";
+    }
     out += "</dl>";
   }
   return out;
@@ -257,7 +275,7 @@ async function sendViaSmtp({ to, subject, text }) {
 async function notify(sub, link) {
   const subject = "New client questionnaire: " + summaryLine(sub.answers);
   const text = formatText(sub, link);
-  const to = list("NOTIFY_TO", "fatimah-alamer@hotmail.com,hello@solid2017.com");
+  const to = list("NOTIFY_TO", "design@solid2017.com,fatimah-alamer@hotmail.com,hello@solid2017.com,aljazi@solid2017.com,banah@solid2017.com,manal@solid2017.com");
   if (smtpConfigured()) {
     try {
       await sendViaSmtp({ to, subject, text });

@@ -78,8 +78,11 @@ function check(name, ok, extra) { results.push({ name, ok: !!ok, extra }); }
   await page.click('.cq-q[data-q="05-3"] .cq-opt[data-opt="Modern Luxury"]');
   await page.click('.cq-q[data-q="05-3"] .cq-opt[data-opt="Warm Minimalism"]');
   check('no picture placeholders', (await page.$$('.cq-opt-nopic')).length === 0);
-  const ticks = await page.$$eval('.cq-q[data-q="05-3"] .cq-opt-tick', els => els.map(e => e.getAttribute('data-opt') + (e.querySelector('img') ? ' +img' : '')));
-  check('05-3 text tick options', JSON.stringify(ticks) === '["A blend of different directions","Not sure — open to exploration"]', ticks);
+  const ticks = await page.$$eval('.cq-q[data-q="05-3"] .cq-options-extra .cq-opt', els => els.map(e => e.getAttribute('data-opt') + (e.querySelector('img') ? ' +img' : '')));
+  check('05-3 extra option cards under "Or choose"', JSON.stringify(ticks) === '["A blend of different directions","Not sure — open to exploration"]' && !!(await page.$('.cq-q[data-q="05-3"] .cq-or')), ticks);
+  const unsure = await page.$$eval('.cq-opt-unsure', els => els.map(e => e.getAttribute('data-opt')));
+  check('every Not sure option is coloured', unsure.length === 13 && unsure.every(t => t.startsWith('Not sure')), unsure.length);
+  check('Not sure colour differs', (await page.$eval('.cq-q[data-q="05-3"] .cq-opt-unsure', e => getComputedStyle(e).backgroundColor)) !== (await page.$eval('.cq-q[data-q="05-3"] .cq-options-extra .cq-opt:not(.cq-opt-unsure)', e => getComputedStyle(e).backgroundColor)));
   check('traditional has a picture', !!(await page.$('.cq-q[data-q="05-3"] .cq-opt-img[data-opt="Traditional / Heritage-inspired"] img')));
   const fit = await page.$$eval('.cq-q[data-q="05-3"] .cq-opt-pic, .cq-q[data-q="06-3"] .cq-opt-pic', els => [...new Set(els.map(e => getComputedStyle(e).objectFit))]);
   check('pictures fitted whole, not cropped', JSON.stringify(fit) === '["contain"]', fit);
@@ -96,8 +99,9 @@ function check(name, ok, extra) { results.push({ name, ok: !!ok, extra }); }
   await page.click('.cq-q[data-q="06-5"] .cq-opt[data-opt="Yes"]'); await page.waitForTimeout(100);
   check('06-5b + 06-7 shown', !(await page.$eval('.cq-q[data-q="06-5b"]', e => e.classList.contains('cq-hidden'))) && !(await page.$eval('.cq-q[data-q="06-7"]', e => e.classList.contains('cq-hidden'))));
   await page.click('.cq-q[data-q="06-1"] .cq-opt[data-opt="Warm neutrals"]');
-  const ticks6 = await page.$$eval('.cq-q[data-q="06-1"] .cq-opt-tick', els => els.map(e => e.getAttribute('data-opt')));
-  check('06-1 Other / Not sure are text ticks', JSON.stringify(ticks6) === '["Other","Not sure"]', ticks6);
+  const ticks6 = await page.$$eval('.cq-q[data-q="06-1"] .cq-options-extra .cq-opt', els => els.map(e => e.getAttribute('data-opt')));
+  check('06-1 Other / Not sure are option cards', JSON.stringify(ticks6) === '["Other","Not sure"]', ticks6);
+  check('06-5b has an upload box', !!(await page.$('.cq-q[data-q="06-5b"] .cq-upload input[type=file]')) && !!(await page.$('.cq-q[data-q="06-5b"] input[type=hidden][name="06.5 Visual references — Files"]')));
   await page.click('.cq-q[data-q="06-1"] .cq-opt[data-opt="Other"]');
   check('06-1 other box shown', await page.$eval('.cq-q[data-q="06-1"] .cq-other[data-for="Other"]', e => e.classList.contains('is-on')));
   await page.fill('input[name="06.1 Colour direction — Other"]', 'Sage green');
@@ -115,6 +119,14 @@ function check(name, ok, extra) { results.push({ name, ok: !!ok, extra }); }
   await page.screenshot({ path: path.join(SHOTS, 'd-08.png'), fullPage: true });
   for (const n of ['09', '10', '11', '12']) { await page.click('[data-nav=next]'); await page.waitForTimeout(150); await page.screenshot({ path: path.join(SHOTS, 'd-' + n + '.png'), fullPage: true }); }
   check('last step 12', (await active()) === '12');
+  await page.click('[data-nav=back]'); await page.waitForTimeout(150);
+  check('page 11 callout', /Tick every item you can send us/.test(await page.$eval('.cq-step.is-active .cq-callout', e => e.textContent)));
+  check('checklist count starts at 0 of 6', (await page.$eval('.cq-q[data-q="11-1"] .cq-count', e => e.textContent)) === '0 of 6 ticked');
+  await page.click('.cq-q[data-q="11-1"] .cq-opt[data-opt="Logo Files"]');
+  check('checklist count updates', (await page.$eval('.cq-q[data-q="11-1"] .cq-count', e => e.textContent)) === '1 of 6 ticked');
+  check('page 11 upload box', !!(await page.$('.cq-q[data-q="11-4"] .cq-upload')));
+  await page.screenshot({ path: path.join(SHOTS, 'd-11.png'), fullPage: true });
+  await page.click('[data-nav=next]'); await page.waitForTimeout(150);
   check('submit visible on last', await page.$eval('.cq-nav', e => e.classList.contains('is-last')));
   await page.click('.cq-q[data-q="12-1"] .cq-opt[data-opt="The experience feels memorable"]');
   await page.fill('textarea[name="12.2 Anything else"]', 'Nothing else.');
@@ -134,6 +146,7 @@ function check(name, ok, extra) { results.push({ name, ok: !!ok, extra }); }
   check('payload 08A.1', payload['08A.1 F&B concept'] === 'Café');
   check('payload 08A.3 indoor', payload['08A.3 Seating — Indoor'] === '40');
   check('payload 08A.4', payload['08A.4 Zones required'] === 'Coffee Bar');
+  check('payload 11.1 checklist', payload['11.1 Handover — Brand & Creative'] === 'Logo Files', payload['11.1 Handover — Brand & Creative']);
   check('no stray option names', !Object.keys(payload).some(k => ['Interior Design', 'Other', 'Yes', 'Café'].includes(k)), Object.keys(payload).filter(k => k.length < 12));
   await page.screenshot({ path: path.join(SHOTS, 'd-done.png'), fullPage: false });
 

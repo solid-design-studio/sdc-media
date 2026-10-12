@@ -52,6 +52,10 @@ def slug(s):
 
 # ---------------------------------------------------------------- option cards
 
+def is_unsure(label):
+    return label.startswith("Not sure")
+
+
 def checkbox_card(q, opt, idx):
     label = opt["label"] if isinstance(opt, dict) else opt
     img = opt.get("img") if isinstance(opt, dict) else None
@@ -61,10 +65,14 @@ def checkbox_card(q, opt, idx):
         if q.get("swatch"):
             cls += " cq-opt-swatch"
     elif q.get("img"):
-        # options without a picture in an image question: a plain tick row, no card
-        cls += " cq-opt-tick"
-    if q.get("small"):
+        # options without a picture in an image question: a card under the pictures
+        cls += " cq-opt-extra"
+    if q.get("checklist"):
+        cls += " cq-opt-check"
+    elif q.get("small"):
         cls += " cq-opt-small"
+    if is_unsure(label):
+        cls += " cq-opt-unsure"
     cid = "cq-%s-%d" % (slug(q["id"]), idx)
     pic = ""
     if img:
@@ -81,12 +89,28 @@ def radio_card(q, opt, idx):
     cls = "cq-opt"
     if desc:
         cls += " cq-opt-stack"
+    if is_unsure(label):
+        cls += " cq-opt-unsure"
     rid = "cq-%s-%d" % (slug(q["id"]), idx)
     inner = ('<label class="w-radio cq-radio"><input type="radio" class="w-radio-input" id="%s" name="%s" value="%s">'
              '<span class="w-form-label">%s</span></label>' % (rid, esc(q["field"]), esc(label), esc(label)))
     if desc:
         inner += '<span class="cq-opt-desc">%s</span>' % esc(desc)
     return '<div class="%s" data-opt="%s">%s</div>' % (cls, esc(label), inner)
+
+
+UPLOAD_ACCEPT = (".jpg,.jpeg,.png,.gif,.webp,.heic,.heif,.tif,.tiff,.svg,.pdf,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,"
+                 ".key,.pages,.numbers,.txt,.rtf,.dwg,.dxf,.skp,.rvt,.ifc,.3dm,.ai,.psd,.indd,.eps,.zip,.rar,.7z,.mp4,.mov,.m4v")
+
+
+def upload_box(q):
+    """Drop zone + file list; uploaded storage paths go into one hidden field (one per line)."""
+    return ('<div class="cq-upload">'
+            '<label class="cq-drop"><input type="file" multiple accept="%s">'
+            '<span class="cq-drop-title">Drag files here or <span class="cq-blue">browse</span></span>'
+            '<span class="cq-drop-sub">Images, PDFs, drawings (DWG, SKP), Office files or ZIP · up to 50 MB each</span></label>'
+            '<ul class="cq-files"></ul>'
+            '<input type="hidden" name="%s" value=""></div>' % (UPLOAD_ACCEPT, esc(q["files_field"])))
 
 
 def explain_options(q):
@@ -123,6 +147,8 @@ def question_html(q, number):
         attrs.append('data-max="%d"' % q["max"])
     if q.get("show_if"):
         attrs.append("data-show-if='%s'" % json.dumps(q["show_if"], ensure_ascii=False).replace("'", "&#39;"))
+    if q.get("checklist"):
+        attrs.append('data-check="1"')
     parts = ['<div %s>' % " ".join(attrs)]
 
     num_html = '<span class="cq-qn">%d.</span>' % number if number else ""
@@ -144,6 +170,9 @@ def question_html(q, number):
             ' placeholder="%s"' % esc(q["placeholder"]) if q.get("placeholder") else "",
             " required" if q.get("required") else ""))
     elif t == "textarea":
+        if q.get("upload"):
+            parts.append(upload_box(q))
+            parts.append('<span class="cq-sublabel">%s</span>' % esc(q.get("links_label", "Links (optional)")))
         parts.append('<textarea class="cq-textarea" name="%s" rows="%d"%s></textarea>' % (
             esc(q["field"]), q.get("rows", 4),
             ' placeholder="%s"' % esc(q["placeholder"]) if q.get("placeholder") else ""))
@@ -174,10 +203,13 @@ def question_html(q, number):
             grid = "cq-options-img" + (" cq-options-swatch" if q.get("swatch") else "") + (" cq-options-tall" if q.get("tall") else "")
             parts.append('<div class="%s">%s</div>' % (grid, "".join(checkbox_card(q, o, i) for i, o in pics)))
             if ticks:
-                parts.append('<div class="cq-ticks">%s</div>' % "".join(checkbox_card(q, o, i) for i, o in ticks))
+                parts.append('<p class="cq-or">Or choose</p><div class="cq-options cq-options-extra">%s</div>'
+                             % "".join(checkbox_card(q, o, i) for i, o in ticks))
         else:
             grid = "cq-options"
-            if q.get("compact"):
+            if q.get("checklist"):
+                grid += " cq-options-check"
+            elif q.get("compact"):
                 grid += " cq-options-4"
             elif q.get("small"):
                 grid += " cq-options-2"
@@ -215,6 +247,9 @@ def step_html(sec):
         parts.append('<p class="cq-intro">%s</p>' % esc(sec["intro"]))
     if sec.get("hint"):
         parts.append('<p class="cq-intro cq-intro-strong">%s</p>' % esc(sec["hint"]))
+    if sec.get("callout"):
+        head, rest = sec["callout"]
+        parts.append('<p class="cq-callout"><strong>%s</strong> %s</p>' % (esc(head), esc(rest)))
     parts.append("</div>")
     if sec.get("questions"):
         parts.append(questions_block(sec["questions"]))
@@ -313,7 +348,9 @@ CSS = """
 .cq-options.cq-options-1 { grid-template-columns: 1fr; }
 .cq-options-img { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px 16px; }
 .cq-options-img.cq-options-swatch { grid-template-columns: repeat(4, 1fr); gap: 24px 20px; }
-.cq-ticks { display: flex; flex-wrap: wrap; gap: 4px 32px; margin-top: 4px; }
+.cq-or { font-family: %(ibm)s; font-weight: 700; font-size: 11px; line-height: 1.4; letter-spacing: 0.16em; text-transform: uppercase; color: #999999; margin: 32px 0 12px; }
+.cq-options.cq-options-extra { grid-template-columns: repeat(3, 1fr); gap: 8px 16px; }
+.cq-options.cq-options-check { grid-template-columns: repeat(2, 1fr); gap: 0 32px; padding: 0 20px; background-color: #FFFFFF; border: 1px solid #DDDDDD; border-radius: 8px; overflow: hidden; }
 .cq-options.cq-options-inline { display: flex; flex-wrap: wrap; gap: 8px; }
 .cq-opt { display: flex; align-items: center; min-height: 54px; padding: 12px 16px; background-color: #F0F0F0; border: 1px solid #F0F0F0; border-radius: 6px; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease; }
 .cq-opt:hover { border-color: #111111; }
@@ -321,8 +358,24 @@ CSS = """
 .cq-opt.is-disabled { opacity: 0.45; cursor: not-allowed; }
 .cq-opt.cq-opt-img { flex-direction: column; align-items: stretch; min-height: 0; padding: 0; gap: 10px; background-color: transparent; border: 0; border-radius: 0; }
 .cq-opt.cq-opt-img.is-selected { background-color: transparent; }
-.cq-opt.cq-opt-tick { min-height: 0; padding: 6px 0; background-color: transparent; border: 0; border-radius: 0; }
-.cq-opt.cq-opt-tick.is-selected { background-color: transparent; }
+.cq-opt.cq-opt-unsure { background-color: #E6E8FF; border-color: #E6E8FF; }
+.cq-opt.cq-opt-unsure:hover { border-color: #2B36FF; }
+.cq-opt.cq-opt-unsure.is-selected { background-color: #2B36FF; border-color: #2B36FF; }
+.cq-opt.cq-opt-check { min-height: 0; padding: 14px 0; margin-bottom: -1px; background-color: transparent; border: 0; border-bottom: 1px solid #EEEEEE; border-radius: 0; }
+.cq-opt.cq-opt-check:hover { border-color: #EEEEEE; }
+.cq-opt.cq-opt-check.is-selected { background-color: transparent; }
+.cq-callout { max-width: 680px; margin: 18px 0 0; padding: 16px 18px; background-color: #FFFFFF; border: 1px solid #DDDDDD; border-left: 4px solid #2B36FF; border-radius: 6px; font-size: 15px; line-height: 1.5; color: #111111; }
+.cq-upload { margin: 4px 0 18px; }
+.cq-drop { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 24px 16px; background-color: #FFFFFF; border: 1px dashed #AAAAAA; border-radius: 8px; text-align: center; cursor: pointer; overflow: hidden; transition: border-color 150ms ease, background-color 150ms ease; }
+.cq-drop:hover { border-color: #2B36FF; background-color: #F5F6FF; }
+.cq-drop.is-over { border-color: #2B36FF; background-color: #F5F6FF; }
+.cq-drop-title { font-size: 15px; font-weight: 500; color: #111111; }
+.cq-drop-sub { font-size: 13px; line-height: 1.4; color: #999999; }
+.cq-files { list-style-type: none; margin: 0; padding: 0; }
+.cq-file { display: flex; align-items: center; gap: 12px; margin-top: 6px; padding: 10px 12px; background-color: #F0F0F0; border-radius: 6px; font-size: 14px; color: #111111; }
+.cq-file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cq-file-state { font-size: 12px; color: #999999; white-space: nowrap; }
+.cq-file-x { padding: 0 4px; border: 0; background-color: transparent; font-size: 20px; line-height: 1; color: #555555; cursor: pointer; }
 .cq-opt.cq-opt-stack { flex-direction: column; align-items: stretch; padding: 16px 18px; }
 .cq-opt.cq-opt-small { min-height: 48px; padding: 10px 14px; }
 .cq-opt-pic { display: block; width: 100%%; height: auto; aspect-ratio: 3 / 4; object-fit: contain; background-color: #F0F0F0; border-radius: 6px; outline: 3px solid transparent; outline-offset: 3px; transition: outline-color 150ms ease, opacity 150ms ease; }
@@ -354,6 +407,8 @@ CSS = """
   .cq-options.cq-options-2 { grid-template-columns: 1fr; }
   .cq-options-img { grid-template-columns: repeat(2, 1fr); gap: 22px 12px; }
   .cq-options-img.cq-options-swatch { grid-template-columns: repeat(3, 1fr); gap: 20px 12px; }
+  .cq-options.cq-options-extra { grid-template-columns: repeat(2, 1fr); gap: 8px 12px; }
+  .cq-options.cq-options-check { grid-template-columns: 1fr; padding: 0 16px; }
   .cq-row { grid-template-columns: 1fr; }
   .cq-nav { flex-wrap: wrap; }
   .cq-progress-title { display: none; }
@@ -361,6 +416,7 @@ CSS = """
 @media screen and (max-width: 479px) {
   .cq-options.cq-options-4 { grid-template-columns: 1fr; }
   .cq-options-img.cq-options-swatch { grid-template-columns: repeat(2, 1fr); }
+  .cq-options.cq-options-extra { grid-template-columns: 1fr; }
   .cq-btn { padding: 0 20px; }
 }
 """ % {"ibm": IBM, "nm": NM}
@@ -376,8 +432,18 @@ HEAD_CSS = """<style>
 .cq-opt.cq-opt-swatch .cq-opt-pic{aspect-ratio:auto;background-color:transparent}
 .cq-opt.cq-opt-img:hover .cq-opt-pic{opacity:.85}
 .cq-opt.cq-opt-img.is-selected .cq-opt-pic{outline-color:#2B36FF;opacity:1}
-.cq-opt.cq-opt-img.is-selected .w-form-label,.cq-opt.cq-opt-tick.is-selected .w-form-label{font-weight:700}
-.cq-opt.cq-opt-tick:hover .w-form-label{text-decoration:underline;text-underline-offset:3px}
+.cq-opt.cq-opt-img.is-selected .w-form-label,.cq-opt.cq-opt-check.is-selected .w-form-label{font-weight:700}
+.cq-opt.cq-opt-unsure .w-form-label{color:#2B36FF}
+.cq-opt.cq-opt-unsure.is-selected .w-form-label{color:#FFFFFF}
+.cq-opt.cq-opt-unsure.is-selected .w-checkbox-input,.cq-opt.cq-opt-unsure.is-selected .w-radio-input{accent-color:#111111}
+.cq-opt.cq-opt-check .w-checkbox-input{width:20px;height:20px}
+.cq-opt.cq-opt-check:hover .w-form-label{text-decoration:underline;text-underline-offset:3px}
+.cq-q[data-check] .cq-count{color:#2B36FF}
+.cq-drop input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.cq-file.is-done .cq-file-state{color:#111111}
+.cq-file.is-done .cq-file-state::before{content:"\2713  "}
+.cq-file.is-err{background:#FDE8E8}.cq-file.is-err .cq-file-state{color:#8A1C1C}
+.cq-callout strong{font-weight:700}
 .cq-js .cq-step{display:none}
 .cq-js .cq-step.is-active{display:block}
 .cq-js .cq-hidden{display:none!important}
@@ -413,13 +479,13 @@ $('input[type=checkbox]').filter(function(c){var q=c.closest('.cq-q');return !!(
 function optText(i){var o=i.closest('.cq-opt');if(!o)return i.value||'';return (o.getAttribute('data-opt')||'').trim()||i.value||''}
 function radioVal(id){var q=form.querySelector('.cq-q[data-q="'+id+'"]');if(!q)return '';var r=q.querySelector('input[type=radio]:checked');return r?r.value:''}
 function evalShow(el){var c=el.getAttribute('data-show-if');if(!c)return true;try{c=JSON.parse(c)}catch(e){return true}var v=radioVal(c.q);if(c.equals!==undefined)return v===c.equals;if(c['in'])return c['in'].indexOf(v)>=0;return true}
-function clearInputs(root){$('input,textarea',root).forEach(function(i){if(i.type==='checkbox'||i.type==='radio'){i.checked=false;i.disabled=false}else if(i.type!=='hidden'&&i.type!=='submit'){i.value=''}else if(i.type==='hidden'){i.value=''}});$('.cq-opt',root).forEach(function(o){o.classList.remove('is-selected','is-disabled')});$('.cq-other',root).forEach(function(o){o.classList.remove('is-on')});$('.cq-count',root).forEach(function(c){c.textContent=''})}
+function clearInputs(root){$('input,textarea',root).forEach(function(i){if(i.type==='checkbox'||i.type==='radio'){i.checked=false;i.disabled=false}else if(i.type!=='hidden'&&i.type!=='submit'){i.value=''}else if(i.type==='hidden'){i.value=''}});$('.cq-opt',root).forEach(function(o){o.classList.remove('is-selected','is-disabled')});$('.cq-other',root).forEach(function(o){o.classList.remove('is-on')});$('.cq-count',root).forEach(function(c){c.textContent=''});$('.cq-file',root).forEach(function(li){li.parentNode.removeChild(li)})}
 function boxFor(b){return b.getAttribute('data-for')||'Other'}
 function compile(q){var h=q.querySelector('input[data-collect]');if(!h)return;var vals=$('input[type=checkbox]',q).filter(function(c){return c.checked}).map(optText);$('.cq-other',q).forEach(function(b){var t=b.querySelector('input,textarea');var k=vals.indexOf(boxFor(b));if(k>=0&&t&&t.value.trim())vals[k]=vals[k]+': '+t.value.trim()});h.value=vals.join(', ')}
 function refresh(q){var max=parseInt(q.getAttribute('data-max')||'0',10);var boxes=$('input[type=checkbox]',q);var n=boxes.filter(function(b){return b.checked}).length;
 $('.cq-opt',q).forEach(function(o){var i=o.querySelector('input');o.classList.toggle('is-selected',!!(i&&i.checked))});
 if(max){boxes.forEach(function(b){var lim=!b.checked&&n>=max;b.disabled=lim;b.closest('.cq-opt').classList.toggle('is-disabled',lim)})}
-var cnt=q.querySelector('.cq-count');if(cnt)cnt.textContent=max?(n+' of '+max+' selected'):(n?n+' selected':'');
+var cnt=q.querySelector('.cq-count');if(cnt)cnt.textContent=max?(n+' of '+max+' selected'):(q.hasAttribute('data-check')?(n+' of '+boxes.length+' ticked'):(n?n+' selected':''));
 $('.cq-other',q).forEach(function(oth){var lab=boxFor(oth);var on=$('input:checked',q).some(function(i){return optText(i)===lab});oth.classList.toggle('is-on',on);if(!on){var t=oth.querySelector('input,textarea');if(t)t.value=''}});
 if(isMulti(q))compile(q)}
 function conditionals(){$('[data-show-if]').forEach(function(el){var show=evalShow(el);var hidden=el.classList.contains('cq-hidden');if(!show&&!hidden)clearInputs(el);el.classList.toggle('cq-hidden',!show)});
@@ -433,12 +499,32 @@ function hideErr(){if(err)err.classList.remove('is-on');$('.is-invalid').forEach
 function validate(step){var bad=$('[required]',step).filter(function(i){return !i.closest('.cq-hidden')&&!i.value.trim()});bad.forEach(function(i){i.classList.add('is-invalid')});if(bad.length){showErr('Please complete the highlighted fields before continuing.');bad[0].focus();return false}return true}
 function scrollTop(){var p=page.querySelector('.cq-progress')||form;var y=p.getBoundingClientRect().top+window.pageYOffset-16;window.scrollTo({top:y,behavior:'smooth'})}
 function go(d){var vs=visible();if(d>0&&!validate(vs[cur]))return;cur=Math.max(0,Math.min(cur+d,vs.length-1));paint();scrollTop()}
-form.addEventListener('change',function(e){var q=e.target.closest('.cq-q');if(q)refresh(q);if(e.target.type==='radio')conditionals();if(e.target.type==='radio')paint()});
+/* file uploads: each file goes straight to private storage via /f; the hidden field keeps the stored paths */
+var MAXB=50*1024*1024;
+function fmtSize(b){return b>=1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB'}
+function syncUp(box){var h=box.querySelector('input[type=hidden]');if(h)h.value=$('.cq-file.is-done',box).map(function(li){return li.getAttribute('data-path')}).join('\n')}
+function uploadOne(box,file){var li=document.createElement('li');li.className='cq-file is-up';
+li.innerHTML='<span class="cq-file-name"></span><span class="cq-file-state">Uploading\u2026</span><button type="button" class="cq-file-x" aria-label="Remove file">\u00d7</button>';
+li.querySelector('.cq-file-name').textContent=file.name+' \u00b7 '+fmtSize(file.size);box.querySelector('.cq-files').appendChild(li);var st=li.querySelector('.cq-file-state');
+function fail(m){li.classList.remove('is-up');li.classList.add('is-err');st.textContent=m;syncUp(box)}
+if(file.size>MAXB){fail('Too large \u2014 max 50 MB, please share a link instead');return}
+fetch('/f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:file.name,size:file.size})})
+.then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok||!j.url)throw new Error(j.error||('http '+r.status));return j})})
+.then(function(j){var fd=new FormData();fd.append('cacheControl','3600');fd.append('',file);return fetch(j.url,{method:'PUT',headers:{'x-upsert':'false'},body:fd}).then(function(r){if(!r.ok)throw new Error('upload '+r.status);li.setAttribute('data-path',j.path)})})
+.then(function(){if(!li.parentNode)return;li.classList.remove('is-up');li.classList.add('is-done');st.textContent='Uploaded';syncUp(box)})
+.catch(function(e){var m=String(e&&e.message);fail(m==='type_not_allowed'?'This file type isn\u2019t supported \u2014 try PDF, an image or ZIP':m==='too_large'?'Too large \u2014 max 50 MB, please share a link instead':'Upload failed \u2014 please try again')})}
+function addFiles(box,files){Array.prototype.slice.call(files||[]).forEach(function(f){uploadOne(box,f)})}
+$('.cq-drop').forEach(function(d){var box=d.closest('.cq-upload');
+d.addEventListener('dragover',function(e){e.preventDefault();d.classList.add('is-over')});
+d.addEventListener('dragleave',function(){d.classList.remove('is-over')});
+d.addEventListener('drop',function(e){e.preventDefault();d.classList.remove('is-over');addFiles(box,e.dataTransfer&&e.dataTransfer.files)})});
+form.addEventListener('change',function(e){if(e.target.type==='file'){addFiles(e.target.closest('.cq-upload'),e.target.files);e.target.value='';return}var q=e.target.closest('.cq-q');if(q)refresh(q);if(e.target.type==='radio')conditionals();if(e.target.type==='radio')paint()});
 form.addEventListener('input',function(e){var q=e.target.closest('.cq-q');if(q&&e.target.closest('.cq-other'))compile(q);if(e.target.classList.contains('is-invalid')&&e.target.value.trim())e.target.classList.remove('is-invalid')});
-form.addEventListener('click',function(e){var b=e.target.closest('[data-nav]');if(b){e.preventDefault();go(b.getAttribute('data-nav')==='next'?1:-1);return}
+form.addEventListener('click',function(e){var x=e.target.closest('.cq-file-x');if(x){e.preventDefault();var li=x.closest('.cq-file'),box=x.closest('.cq-upload');li.parentNode.removeChild(li);syncUp(box);return}
+var b=e.target.closest('[data-nav]');if(b){e.preventDefault();go(b.getAttribute('data-nav')==='next'?1:-1);return}
 var o=e.target.closest('.cq-opt');if(o&&!e.target.closest('input,label')){var i=o.querySelector('input');if(i&&!i.disabled)i.click()}});
 form.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='submit'){e.preventDefault();if(nav.classList.contains('has-next'))go(1)}});
-form.addEventListener('submit',function(e){var vs=visible();for(var i=0;i<vs.length;i++){if(!validate(vs[i])){e.preventDefault();e.stopImmediatePropagation();cur=i;paint();scrollTop();showErr('Please complete the highlighted fields before submitting.');return false}}$('.cq-q').filter(isMulti).forEach(compile)},true);
+form.addEventListener('submit',function(e){if($('.cq-file.is-up').length){e.preventDefault();e.stopImmediatePropagation();showErr('Please wait until your files have finished uploading.');return false}var vs=visible();for(var i=0;i<vs.length;i++){if(!validate(vs[i])){e.preventDefault();e.stopImmediatePropagation();cur=i;paint();scrollTop();showErr('Please complete the highlighted fields before submitting.');return false}}$('.cq-q').filter(isMulti).forEach(compile)},true);
 conditionals();$('.cq-q').forEach(refresh);paint();
 });
 })();
@@ -498,17 +584,21 @@ fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},b
 </script>"""
 
 
-RELAY_JS = """<script>
+RELAY_JS = r"""<script>
 /* Emails each submission to the team through FormSubmit (formsubmit.co), approved by Solid on 12 Oct 2026.
    No keys: the first message asks design@ to click "Activate Form" once. */
 function relay(answers,link){
-  var to='design@solid2017.com', cc='fatimah-alamer@hotmail.com,hello@solid2017.com';
+  var to='design@solid2017.com', cc='fatimah-alamer@hotmail.com,hello@solid2017.com,aljazi@solid2017.com,banah@solid2017.com,manal@solid2017.com';
   var name=(answers['01.1 Project / Brand Name']||'Untitled project').trim();
   var type=(answers['01.5 Project type']||'').trim();
   var p={_subject:'New client questionnaire: '+name+(type?' ('+type+')':''),_cc:cc,_template:'table',_captcha:'false',
     'Project':name,'Project type':type,'Contact':answers['01.2 Primary Contact']||'','Location':answers['01.3 Project Location / Venue']||'',
     'Full answers (private link)':link||'See the team inbox'};
-  Object.keys(answers).forEach(function(k){var v=answers[k];if(typeof v==='string'&&v.trim()&&!(k in p))p[k]=v.trim()});
+  /* uploaded files become download links that only work with this submission's private token */
+  var m=/\/s\/([0-9a-f-]{36})\?t=([A-Za-z0-9_-]+)/.exec(link||'');
+  Object.keys(answers).forEach(function(k){var v=answers[k];if(typeof v!=='string'||!v.trim()||(k in p))return;v=v.trim();
+    if(/ \u2014 Files$/.test(k)&&m)v=v.split('\n').map(function(f){f=f.trim();return f.split('/').pop()+' \u2014 '+location.origin+'/f?id='+m[1]+'&t='+m[2]+'&p='+encodeURIComponent(f)}).join('\n');
+    p[k]=v});
   fetch('https://formsubmit.co/ajax/'+to,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(p),keepalive:true}).catch(function(){});
 }
 </script>"""
@@ -551,6 +641,9 @@ def fields_map():
                     fields.append({"key": field, "label": "%s — %s" % (q["label"], sub_label), "section": code, "sectionTitle": title})
                 continue
             fields.append({"key": q["field"], "label": q["label"], "section": code, "sectionTitle": title})
+            if q.get("files_field"):
+                fields.append({"key": q["files_field"], "label": "%s (uploaded files)" % q["label"],
+                               "section": code, "sectionTitle": title})
             for label, suffix, _ in explain_options(q):
                 fields.append({"key": q["field"] + " — " + suffix, "label": "%s (%s)" % (q["label"], label),
                                "section": code, "sectionTitle": title})
