@@ -257,7 +257,7 @@ async function sendViaSmtp({ to, subject, text }) {
 async function notify(sub, link) {
   const subject = "New client questionnaire: " + summaryLine(sub.answers);
   const text = formatText(sub, link);
-  const to = list("NOTIFY_TO", "fatimah@solid2017.com,hello@solid2017.com");
+  const to = list("NOTIFY_TO", "fatimah-alamer@hotmail.com,hello@solid2017.com");
   if (smtpConfigured()) {
     try {
       await sendViaSmtp({ to, subject, text });
@@ -277,7 +277,7 @@ async function notify(sub, link) {
     await createNoticeEvent({
       summary: subject,
       description: text,
-      attendees: list("CALENDAR_INVITEES", "fatimah@solid2017.com,design@solid2017.com"),
+      attendees: list("CALENDAR_INVITEES", "fatimah-alamer@hotmail.com,design@solid2017.com"),
     });
     return "calendar";
   } catch (err) {

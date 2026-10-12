@@ -196,7 +196,7 @@ fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},b
 /* Emails each submission to the team through FormSubmit (formsubmit.co), approved by Solid on 12 Oct 2026.
    No keys: the first message asks design@ to click "Activate Form" once. */
 function relay(answers,link){
-  var to='design@solid2017.com', cc='fatimah@solid2017.com,hello@solid2017.com';
+  var to='design@solid2017.com', cc='fatimah-alamer@hotmail.com,hello@solid2017.com';
   var name=(answers['01.1 Project / Brand Name']||'Untitled project').trim();
   var type=(answers['01.5 Project type']||'').trim();
   var p={_subject:'New client questionnaire: '+name+(type?' ('+type+')':''),_cc:cc,_template:'table',_captcha:'false',
