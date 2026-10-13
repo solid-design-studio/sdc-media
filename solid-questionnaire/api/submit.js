@@ -1,8 +1,6 @@
 "use strict";
 const crypto = require("node:crypto");
-const { insertSubmission, rpc, notify, origin } = require("./_lib");
-
-const REQUIRED = ["01.1 Project / Brand Name", "01.2 Primary Contact", "01.3 Project Location / Venue"];
+const { insertSubmission, rpc, notify, origin, FORMS } = require("./_lib");
 const MAX_FIELDS = 400;
 const MAX_KEY = 160;
 const MAX_VALUE = 8000;
@@ -14,6 +12,8 @@ module.exports = async (req, res) => {
   const body = req.body && typeof req.body === "object" ? req.body : null;
   const answers = body && body.answers && typeof body.answers === "object" && !Array.isArray(body.answers) ? body.answers : null;
   if (!answers) return res.status(400).json({ error: "invalid_json" });
+  const formId = Object.prototype.hasOwnProperty.call(FORMS, body.form) ? body.form : "interior";
+  const form = FORMS[formId];
 
   // Honeypot: the page has no field called "website"; bots fill everything.
   if (typeof answers.website === "string" && answers.website.trim()) return res.status(200).json({ id: null });
@@ -24,13 +24,13 @@ module.exports = async (req, res) => {
   let total = 0;
   for (const k of keys) {
     const v = answers[k];
-    if (typeof v !== "string" || k.length > MAX_KEY) continue;
+    if (typeof v !== "string" || k.length > MAX_KEY || k.charAt(0) === "_") continue;
     const t = v.trim().slice(0, MAX_VALUE);
     total += t.length;
     if (total > MAX_TOTAL) return res.status(400).json({ error: "too_large" });
     clean[k] = t;
   }
-  for (const k of REQUIRED) {
+  for (const k of form.required) {
     if (!clean[k]) return res.status(400).json({ error: "required", field: k });
   }
 
@@ -38,10 +38,10 @@ module.exports = async (req, res) => {
   let row;
   try {
     row = await insertSubmission({
-      project_name: clean["01.1 Project / Brand Name"] || null,
-      contact: clean["01.2 Primary Contact"] || null,
-      project_type: clean["01.5 Project type"] || null,
-      answers: clean,
+      project_name: clean[form.name] || null,
+      contact: clean[form.contact] || null,
+      project_type: clean[form.type] || null,
+      answers: Object.assign({ _form: formId }, clean),
       access_token: token,
       user_agent: String(req.headers["user-agent"] || "").slice(0, 300),
     });

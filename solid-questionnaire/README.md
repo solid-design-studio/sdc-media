@@ -4,7 +4,10 @@ A standalone site for the Client Questionnaire (Interior & Spatial Design). It i
 the Solid website: clients get the link directly from their account manager.
 
 - Hosting: Vercel project `solid-questionnaire` (team "Solid Design Studio's projects").
-- Page: `index.html` and `fields.json`, both written by `../webflow-client-questionnaire/build.py` (edit `spec.py` there, run `python3 build.py`; never edit `index.html` by hand).
+- Pages: `/` is a landing page linking to both; `/interior` is the Interior & Spatial questionnaire (`interior/index.html`, `fields.json`) and `/graphic-design` the
+  Branding & Graphic Design one (`graphic-design/index.html`, `fields-branding.json`; `/branding` redirects there). All three are written by
+  `../webflow-client-questionnaire/build.py` (`python3 build.py` / `python3 build.py branding`); never edit them by hand.
+  Each page posts its id as `form`; it is stored as `_form` in the answers and picks the field map (`FORMS` in `api/_lib.js`).
 - Submissions: Supabase project `solid-hub`, table `questionnaire_submissions` (insert-only for the site;
   reads go through the `questionnaire_submission` / `questionnaire_inbox` functions).
 - Images: Supabase storage bucket `questionnaire` (public read; uploads only with the service key / dashboard).

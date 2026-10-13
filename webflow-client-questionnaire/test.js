@@ -81,7 +81,7 @@ function check(name, ok, extra) { results.push({ name, ok: !!ok, extra }); }
   const ticks = await page.$$eval('.cq-q[data-q="05-3"] .cq-options-extra .cq-opt', els => els.map(e => e.getAttribute('data-opt') + (e.querySelector('img') ? ' +img' : '')));
   check('05-3 extra option cards under "Or choose"', JSON.stringify(ticks) === '["A blend of different directions","Not sure — open to exploration"]' && !!(await page.$('.cq-q[data-q="05-3"] .cq-or')), ticks);
   const unsure = await page.$$eval('.cq-opt-unsure', els => els.map(e => e.getAttribute('data-opt')));
-  check('every Not sure option is coloured', unsure.length === 13 && unsure.every(t => t.startsWith('Not sure')), unsure.length);
+  check('every Not sure option is coloured', unsure.length === 14 && unsure.every(t => /not sure/i.test(t)), unsure.length);
   check('Not sure colour differs', (await page.$eval('.cq-q[data-q="05-3"] .cq-opt-unsure', e => getComputedStyle(e).backgroundColor)) !== (await page.$eval('.cq-q[data-q="05-3"] .cq-options-extra .cq-opt:not(.cq-opt-unsure)', e => getComputedStyle(e).backgroundColor)));
   check('traditional has a picture', !!(await page.$('.cq-q[data-q="05-3"] .cq-opt-img[data-opt="Traditional / Heritage-inspired"] img')));
   const fit = await page.$$eval('.cq-q[data-q="05-3"] .cq-opt-pic, .cq-q[data-q="06-3"] .cq-opt-pic', els => [...new Set(els.map(e => getComputedStyle(e).objectFit))]);

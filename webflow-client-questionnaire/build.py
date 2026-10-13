@@ -13,16 +13,50 @@ Outputs (in ./out):
   fields.json         -> ordered field map used by the submission emails; also copied next to it
 """
 import html
+import importlib
 import json
 import os
 import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from spec import SECTIONS, INTRO  # noqa: E402
-
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "out")
+
+# python3 build.py            -> interior questionnaire (spec.py) at /interior
+# python3 build.py branding   -> branding / graphic design questionnaire (spec_branding.py) at /graphic-design
+# Either run also writes the landing page at / that links to both.
+FORMS = {
+    "interior": {
+        "spec": "spec", "out": "out", "page": "interior/index.html", "fields": "fields.json",
+        "path": "/interior", "card": "Interior &amp; Spatial Design",
+        "blurb": "Restaurants, retail, workplaces, pop-ups, exhibitions and other spaces.",
+        "title": "Client Questionnaire · Solid",
+        "tag": "Client Questionnaire · Interior &amp; Spatial Design",
+        "h1": 'Tell us about your <span class="cq-blue">space</span>.',
+        "time": "Takes about 10–15 minutes. Answer only what applies to your project.",
+        "relay": {"id": "interior", "subject": "New client questionnaire", "name": "01.1 Project / Brand Name",
+                  "type": "01.5 Project type", "typeLabel": "Project type", "contact": "01.2 Primary Contact",
+                  "location": "01.3 Project Location / Venue"},
+    },
+    "branding": {
+        "spec": "spec_branding", "out": "out-branding", "page": "graphic-design/index.html", "fields": "fields-branding.json",
+        "path": "/graphic-design", "card": "Branding &amp; Graphic Design",
+        "blurb": "New brands, refreshes and visual identities.",
+        "title": "Branding Questionnaire · Solid",
+        "tag": "Client Questionnaire · Branding &amp; Graphic Design",
+        "h1": 'Tell us about your <span class="cq-blue">brand</span>.',
+        "time": "Takes about 5–10 minutes. Answer only what applies to your project.",
+        "relay": {"id": "branding", "subject": "New branding questionnaire", "name": "00.1 Brand / Company Name",
+                  "type": "01.1 Starting point", "typeLabel": "Starting point", "contact": "00.2 Primary Contact"},
+    },
+}
+FORM_ID = sys.argv[1] if len(sys.argv) > 1 else "interior"
+if FORM_ID not in FORMS:
+    raise SystemExit("unknown questionnaire %r (choose from %s)" % (FORM_ID, ", ".join(FORMS)))
+FORM = FORMS[FORM_ID]
+_spec = importlib.import_module(FORM["spec"])
+SECTIONS, INTRO = _spec.SECTIONS, _spec.INTRO
+OUT = os.path.join(HERE, FORM["out"])
 os.makedirs(OUT, exist_ok=True)
 
 SITE = os.path.join(HERE, "..", "solid-questionnaire")
@@ -53,7 +87,7 @@ def slug(s):
 # ---------------------------------------------------------------- option cards
 
 def is_unsure(label):
-    return label.startswith("Not sure")
+    return "not sure" in label.lower()
 
 
 def checkbox_card(q, opt, idx):
@@ -86,13 +120,17 @@ def checkbox_card(q, opt, idx):
 def radio_card(q, opt, idx):
     label = opt["label"] if isinstance(opt, dict) else opt
     desc = opt.get("desc") if isinstance(opt, dict) else None
+    img = opt.get("img") if isinstance(opt, dict) else None
     cls = "cq-opt"
-    if desc:
+    if img:
+        cls += " cq-opt-img"
+    elif desc:
         cls += " cq-opt-stack"
     if is_unsure(label):
         cls += " cq-opt-unsure"
     rid = "cq-%s-%d" % (slug(q["id"]), idx)
-    inner = ('<label class="w-radio cq-radio"><input type="radio" class="w-radio-input" id="%s" name="%s" value="%s">'
+    pic = '<img class="cq-opt-pic" src="%s" alt="%s" loading="lazy">' % (img_url(img), esc(label)) if img else ""
+    inner = pic + ('<label class="w-radio cq-radio"><input type="radio" class="w-radio-input" id="%s" name="%s" value="%s">'
              '<span class="w-form-label">%s</span></label>' % (rid, esc(q["field"]), esc(label), esc(label)))
     if desc:
         inner += '<span class="cq-opt-desc">%s</span>' % esc(desc)
@@ -111,6 +149,21 @@ def upload_box(q):
             '<span class="cq-drop-sub">Images, PDFs, drawings (DWG, SKP), Office files or ZIP · up to 50 MB each</span></label>'
             '<ul class="cq-files"></ul>'
             '<input type="hidden" name="%s" value=""></div>' % (UPLOAD_ACCEPT, esc(q["files_field"])))
+
+
+def picture_options(q, opts, card):
+    """Same-size picture cards on a grid; options without a picture follow as cards under "Or choose"."""
+    pics = [(i, o) for i, o in opts if isinstance(o, dict) and o.get("img")]
+    rest = [(i, o) for i, o in opts if not (isinstance(o, dict) and o.get("img"))]
+    grid = "cq-options-img"
+    for flag in ("swatch", "tall", "wide"):
+        if q.get(flag):
+            grid += " cq-options-" + flag
+    out = '<div class="%s">%s</div>' % (grid, "".join(card(q, o, i) for i, o in pics))
+    if rest:
+        out += ('<p class="cq-or">Or choose</p><div class="cq-options cq-options-extra%s">%s</div>'
+                % (" cq-options-extra-2" if q.get("wide") else "", "".join(card(q, o, i) for i, o in rest)))
+    return out
 
 
 def explain_options(q):
@@ -149,6 +202,8 @@ def question_html(q, number):
         attrs.append("data-show-if='%s'" % json.dumps(q["show_if"], ensure_ascii=False).replace("'", "&#39;"))
     if q.get("checklist"):
         attrs.append('data-check="1"')
+    if q.get("required") and q["type"] == "single":
+        attrs.append('data-required="1"')
     parts = ['<div %s>' % " ".join(attrs)]
 
     num_html = '<span class="cq-qn">%d.</span>' % number if number else ""
@@ -189,22 +244,19 @@ def question_html(q, number):
                         '<input class="cq-input" type="%s" name="%s"%s></div>' % (esc(sub_label), itype, esc(field), extra))
         parts.append('<div class="cq-row">%s</div>' % "".join(cols))
     elif t == "single":
-        grid = "cq-options cq-options-inline" if q.get("inline") else "cq-options"
-        if any(isinstance(o, dict) and o.get("desc") for o in q["options"]):
-            grid = "cq-options cq-options-1"
-        cards = "".join(radio_card(q, o, i) for i, o in enumerate(q["options"]))
-        parts.append('<div class="%s">%s</div>' % (grid, cards))
+        opts = list(enumerate(q["options"]))
+        if q.get("img"):
+            parts.append(picture_options(q, opts, radio_card))
+        else:
+            grid = "cq-options cq-options-inline" if q.get("inline") else "cq-options"
+            if q.get("stack") or any(isinstance(o, dict) and o.get("desc") for o in q["options"]):
+                grid = "cq-options cq-options-1"
+            parts.append('<div class="%s">%s</div>' % (grid, "".join(radio_card(q, o, i) for i, o in opts)))
         parts.append(explain_fields(q))
     elif t == "multi":
         opts = list(enumerate(q["options"]))
         if q.get("img"):
-            pics = [(i, o) for i, o in opts if isinstance(o, dict) and o.get("img")]
-            ticks = [(i, o) for i, o in opts if not (isinstance(o, dict) and o.get("img"))]
-            grid = "cq-options-img" + (" cq-options-swatch" if q.get("swatch") else "") + (" cq-options-tall" if q.get("tall") else "")
-            parts.append('<div class="%s">%s</div>' % (grid, "".join(checkbox_card(q, o, i) for i, o in pics)))
-            if ticks:
-                parts.append('<p class="cq-or">Or choose</p><div class="cq-options cq-options-extra">%s</div>'
-                             % "".join(checkbox_card(q, o, i) for i, o in ticks))
+            parts.append(picture_options(q, opts, checkbox_card))
         else:
             grid = "cq-options"
             if q.get("checklist"):
@@ -241,6 +293,8 @@ def step_html(sec):
     attrs = ['class="cq-step"', 'data-step="%s"' % sec["num"], 'data-title="%s"' % esc(sec["title"])]
     if sec.get("conditional_section"):
         attrs.append('data-conditional="1"')
+    if sec.get("show_if"):
+        attrs.append("data-show-if='%s'" % json.dumps(sec["show_if"], ensure_ascii=False))
     parts = ['<div %s>' % " ".join(attrs)]
     parts.append('<div class="cq-step-head"><h2 class="cq-h2">%s</h2>' % esc(sec["title"]))
     if sec.get("intro"):
@@ -271,14 +325,14 @@ def shell_html():
     return (
         '<section class="cq-page" id="client-questionnaire"><div class="cq-wrap">'
         '<header class="cq-head">'
-        '<p class="cq-tag">Client Questionnaire · Interior &amp; Spatial Design</p>'
-        '<h1 class="cq-h1">Tell us about your <span class="cq-blue">space</span>.</h1>'
+        '<p class="cq-tag">%s</p>'
+        '<h1 class="cq-h1">%s</h1>' % (FORM["tag"], FORM["h1"])
         + intro +
-        '<p class="cq-note">Takes about 10–15 minutes. Answer only what applies to your project.</p>'
+        '<p class="cq-note">%s</p>' % esc(FORM["time"]) +
         '</header>'
         '<div class="cq-progress"><div class="cq-progress-top">'
-        '<span class="cq-progress-label" data-cq-step-label="1">Step 1 of 12</span>'
-        '<span class="cq-progress-title" data-cq-step-title="1">Project Overview</span></div>'
+        '<span class="cq-progress-label" data-cq-step-label="1">Step 1 of %d</span>'
+        '<span class="cq-progress-title" data-cq-step-title="1">%s</span></div>' % (len(SECTIONS), esc(SECTIONS[0]["title"])) +
         '<div class="cq-bar"><div class="cq-bar-fill" data-cq-bar="1"></div></div></div>'
         '<form class="cq-form" name="Client Questionnaire" data-name="Client Questionnaire" method="post">'
         '<div class="cq-steps"></div>'
@@ -348,8 +402,10 @@ CSS = """
 .cq-options.cq-options-1 { grid-template-columns: 1fr; }
 .cq-options-img { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px 16px; }
 .cq-options-img.cq-options-swatch { grid-template-columns: repeat(4, 1fr); gap: 24px 20px; }
+.cq-options-img.cq-options-wide { grid-template-columns: repeat(2, 1fr); gap: 28px 20px; }
 .cq-or { font-family: %(ibm)s; font-weight: 700; font-size: 11px; line-height: 1.4; letter-spacing: 0.16em; text-transform: uppercase; color: #999999; margin: 32px 0 12px; }
 .cq-options.cq-options-extra { grid-template-columns: repeat(3, 1fr); gap: 8px 16px; }
+.cq-options.cq-options-extra.cq-options-extra-2 { grid-template-columns: repeat(2, 1fr); gap: 8px 20px; }
 .cq-options.cq-options-check { grid-template-columns: repeat(2, 1fr); gap: 0 32px; padding: 0 20px; background-color: #FFFFFF; border: 1px solid #DDDDDD; border-radius: 8px; overflow: hidden; }
 .cq-options.cq-options-inline { display: flex; flex-wrap: wrap; gap: 8px; }
 .cq-opt { display: flex; align-items: center; min-height: 54px; padding: 12px 16px; background-color: #F0F0F0; border: 1px solid #F0F0F0; border-radius: 6px; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease; }
@@ -417,6 +473,8 @@ CSS = """
   .cq-options.cq-options-4 { grid-template-columns: 1fr; }
   .cq-options-img.cq-options-swatch { grid-template-columns: repeat(2, 1fr); }
   .cq-options.cq-options-extra { grid-template-columns: 1fr; }
+  .cq-options.cq-options-extra.cq-options-extra-2 { grid-template-columns: 1fr; }
+  .cq-options-img.cq-options-wide { grid-template-columns: 1fr; }
   .cq-btn { padding: 0 20px; }
 }
 """ % {"ibm": IBM, "nm": NM}
@@ -429,6 +487,10 @@ HEAD_CSS = """<style>
 .cq-opt.cq-opt-img .w-checkbox{align-items:flex-start}
 .cq-opt.cq-opt-small .w-form-label{font-size:14px}
 .cq-options-tall .cq-opt-pic{aspect-ratio:2/3}
+.cq-options-wide .cq-opt-pic{aspect-ratio:16/9}
+.cq-opt.cq-opt-img .cq-opt-desc{margin-top:-4px}
+.cq-q.is-invalid .cq-label{color:#2B36FF}
+.cq-q.is-invalid .cq-opt{border-color:#2B36FF}
 .cq-opt.cq-opt-swatch .cq-opt-pic{aspect-ratio:auto;background-color:transparent}
 .cq-opt.cq-opt-img:hover .cq-opt-pic{opacity:.85}
 .cq-opt.cq-opt-img.is-selected .cq-opt-pic{outline-color:#2B36FF;opacity:1}
@@ -490,13 +552,15 @@ $('.cq-other',q).forEach(function(oth){var lab=boxFor(oth);var on=$('input:check
 if(isMulti(q))compile(q)}
 function conditionals(){$('[data-show-if]').forEach(function(el){var show=evalShow(el);var hidden=el.classList.contains('cq-hidden');if(!show&&!hidden)clearInputs(el);el.classList.toggle('cq-hidden',!show)});
 steps.forEach(function(s){if(!s.getAttribute('data-conditional'))return;var subs=$('.cq-sub',s);var any=subs.some(function(x){return !x.classList.contains('cq-hidden')});s.classList.toggle('cq-skip',!any)})}
-function visible(){return steps.filter(function(s){return !s.classList.contains('cq-skip')})}
+function visible(){return steps.filter(function(s){return !s.classList.contains('cq-skip')&&!s.classList.contains('cq-hidden')})}
 function paint(){var vs=visible();if(cur>vs.length-1)cur=vs.length-1;steps.forEach(function(s){s.classList.remove('is-active')});var s=vs[cur];s.classList.add('is-active');
 if(lbl)lbl.textContent='Step '+(cur+1)+' of '+vs.length;if(ttl)ttl.textContent=s.getAttribute('data-title')||'';if(bar)bar.style.width=Math.round((cur+1)/vs.length*100)+'%';
 nav.classList.toggle('has-back',cur>0);nav.classList.toggle('has-next',cur<vs.length-1);nav.classList.toggle('is-last',cur===vs.length-1);hideErr()}
 function showErr(m){if(err){err.textContent=m;err.classList.add('is-on')}}
 function hideErr(){if(err)err.classList.remove('is-on');$('.is-invalid').forEach(function(i){i.classList.remove('is-invalid')})}
-function validate(step){var bad=$('[required]',step).filter(function(i){return !i.closest('.cq-hidden')&&!i.value.trim()});bad.forEach(function(i){i.classList.add('is-invalid')});if(bad.length){showErr('Please complete the highlighted fields before continuing.');bad[0].focus();return false}return true}
+function validate(step){var bad=$('[required]',step).filter(function(i){return !i.closest('.cq-hidden')&&!i.value.trim()});bad.forEach(function(i){i.classList.add('is-invalid')});
+var badQ=$('.cq-q[data-required]',step).filter(function(q){return !q.closest('.cq-hidden')&&!q.querySelector('input:checked')});badQ.forEach(function(q){q.classList.add('is-invalid')});
+if(bad.length||badQ.length){showErr(badQ.length&&!bad.length?'Please choose an option for the highlighted question before continuing.':'Please complete the highlighted fields before continuing.');if(bad.length)bad[0].focus();else badQ[0].scrollIntoView({block:'center',behavior:'smooth'});return false}return true}
 function scrollTop(){var p=page.querySelector('.cq-progress')||form;var y=p.getBoundingClientRect().top+window.pageYOffset-16;window.scrollTo({top:y,behavior:'smooth'})}
 function go(d){var vs=visible();if(d>0&&!validate(vs[cur]))return;cur=Math.max(0,Math.min(cur+d,vs.length-1));paint();scrollTop()}
 /* file uploads: each file goes straight to private storage via /f; the hidden field keeps the stored paths */
@@ -518,7 +582,7 @@ $('.cq-drop').forEach(function(d){var box=d.closest('.cq-upload');
 d.addEventListener('dragover',function(e){e.preventDefault();d.classList.add('is-over')});
 d.addEventListener('dragleave',function(){d.classList.remove('is-over')});
 d.addEventListener('drop',function(e){e.preventDefault();d.classList.remove('is-over');addFiles(box,e.dataTransfer&&e.dataTransfer.files)})});
-form.addEventListener('change',function(e){if(e.target.type==='file'){addFiles(e.target.closest('.cq-upload'),e.target.files);e.target.value='';return}var q=e.target.closest('.cq-q');if(q)refresh(q);if(e.target.type==='radio')conditionals();if(e.target.type==='radio')paint()});
+form.addEventListener('change',function(e){if(e.target.type==='file'){addFiles(e.target.closest('.cq-upload'),e.target.files);e.target.value='';return}var q=e.target.closest('.cq-q');if(q&&q.classList.contains('is-invalid')&&q.querySelector('input:checked'))q.classList.remove('is-invalid');if(q)refresh(q);if(e.target.type==='radio')conditionals();if(e.target.type==='radio')paint()});
 form.addEventListener('input',function(e){var q=e.target.closest('.cq-q');if(q&&e.target.closest('.cq-other'))compile(q);if(e.target.classList.contains('is-invalid')&&e.target.value.trim())e.target.classList.remove('is-invalid')});
 form.addEventListener('click',function(e){var x=e.target.closest('.cq-file-x');if(x){e.preventDefault();var li=x.closest('.cq-file'),box=x.closest('.cq-upload');li.parentNode.removeChild(li);syncUp(box);return}
 var b=e.target.closest('[data-nav]');if(b){e.preventDefault();go(b.getAttribute('data-nav')==='next'?1:-1);return}
@@ -574,7 +638,7 @@ var wrap=document.querySelector('.cq-form');if(!wrap)return;var form=wrap.queryS
 form.addEventListener('submit',function(e){e.preventDefault();if(btn.disabled)return;
 var fd=new FormData(form);var answers={};fd.forEach(function(v,k){if(typeof v==='string')answers[k]=v});
 btn.disabled=true;var label=btn.value;btn.value='Sending\\u2026';fail.style.display='none';
-fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({answers:answers})})
+fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({form:(window.CQ_FORM||{}).id,answers:answers})})
 .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()})
 .then(function(res){try{relay(answers,res&&res.link)}catch(e){}form.style.display='none';done.style.display='block';var p=document.querySelector('.cq-progress');if(p)p.style.display='none';window.scrollTo({top:0,behavior:'smooth'})})
 .catch(function(){fail.style.display='block';btn.disabled=false;btn.value=label});
@@ -589,11 +653,12 @@ RELAY_JS = r"""<script>
    No keys: the first message asks design@ to click "Activate Form" once. */
 function relay(answers,link){
   var to='design@solid2017.com', cc='fatimah-alamer@hotmail.com,hello@solid2017.com,aljazi@solid2017.com,banah@solid2017.com,manal@solid2017.com';
-  var name=(answers['01.1 Project / Brand Name']||'Untitled project').trim();
-  var type=(answers['01.5 Project type']||'').trim();
-  var p={_subject:'New client questionnaire: '+name+(type?' ('+type+')':''),_cc:cc,_template:'table',_captcha:'false',
-    'Project':name,'Project type':type,'Contact':answers['01.2 Primary Contact']||'','Location':answers['01.3 Project Location / Venue']||'',
-    'Full answers (private link)':link||'See the team inbox'};
+  var F=window.CQ_FORM||{};
+  var name=(answers[F.name]||'Untitled project').trim();
+  var type=(answers[F.type]||'').trim();
+  var p={_subject:F.subject+': '+name+(type?' ('+type+')':''),_cc:cc,_template:'table',_captcha:'false','Project':name};
+  p[F.typeLabel]=type;p['Contact']=answers[F.contact]||'';if(F.location)p['Location']=answers[F.location]||'';
+  p['Full answers (private link)']=link||'See the team inbox';
   /* uploaded files become download links that only work with this submission's private token */
   var m=/\/s\/([0-9a-f-]{36})\?t=([A-Za-z0-9_-]+)/.exec(link||'');
   Object.keys(answers).forEach(function(k){var v=answers[k];if(typeof v!=='string'||!v.trim()||(k in p))return;v=v.trim();
@@ -620,14 +685,15 @@ def standalone_html(steps, shell, nav):
 .cq-topbar{background:#111111;height:64px;display:flex;align-items:center;padding:0 32px}.cq-topbar img{height:22px;width:auto;display:block}
 @media (max-width:767px){.cq-topbar{padding:0 24px;height:60px}}
 """
-    return """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Client Questionnaire · Solid</title>
+    return """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title>
 <meta name="robots" content="noindex,nofollow"><meta name="description" content="Solid Design Studio client questionnaire for interior and spatial design projects.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-<style>%s%s</style>%s%s%s%s</head><body>
+<style>%s%s</style><script>window.CQ_FORM=%s</script>%s%s%s%s</head><body>
 <div class="cq-topbar"><a href="https://www.solid2017.com" aria-label="Solid Design Studio"><img src="/solid-logo.svg" alt="Solid"></a></div>
 %s
-</body></html>""" % (base, CSS.replace("'Ibm Plex Sans'", "'IBM Plex Sans'"), HEAD_CSS, JS, SUBMIT_JS, RELAY_JS, body)
+</body></html>""" % (esc(FORM["title"]), base, CSS.replace("'Ibm Plex Sans'", "'IBM Plex Sans'"),
+                       json.dumps(FORM["relay"], ensure_ascii=False), HEAD_CSS, JS, SUBMIT_JS, RELAY_JS, body)
 
 
 def fields_map():
@@ -658,6 +724,41 @@ def fields_map():
     return {"sections": sections, "fields": fields}
 
 
+def landing_html():
+    """questionnaire.solid2017.com/ : pick a questionnaire (links shared before /interior existed land here)."""
+    cards = "".join(
+        '<a class="lq-card" href="%s"><span class="lq-tag">Client Questionnaire</span><span class="lq-name">%s</span>'
+        '<span class="lq-blurb">%s</span><span class="lq-go">Start &rarr;</span></a>' % (f["path"], f["card"], f["blurb"])
+        for f in FORMS.values())
+    return """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Client Questionnaires · Solid</title><meta name="robots" content="noindex,nofollow">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'Neue Montreal';src:url('/fonts/NeueMontreal-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Neue Montreal';src:url('/fonts/NeueMontreal-Medium.woff2') format('woff2');font-weight:500;font-display:swap}
+*{box-sizing:border-box}body{margin:0;background:#FAFAFA;color:#111111;font-family:'Neue Montreal',Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.cq-topbar{background:#111111;height:64px;display:flex;align-items:center;padding:0 32px}.cq-topbar img{height:22px;width:auto;display:block}
+.lq{max-width:880px;margin:0 auto;padding:72px 28px 96px}
+.lq-kicker{font:700 11px/1.4 'IBM Plex Sans',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:#999999;margin:0 0 16px}
+.lq h1{font:700 56px/1.05 'IBM Plex Sans',sans-serif;letter-spacing:-.01em;margin:0 0 20px}.lq h1 span{color:#2B36FF}
+.lq-lead{font-size:17px;line-height:1.55;max-width:620px;margin:0 0 40px}
+.lq-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.lq-card{display:flex;flex-direction:column;gap:10px;padding:28px;background:#FFFFFF;border:1px solid #DDDDDD;border-radius:8px;color:#111111;text-decoration:none;transition:border-color 150ms ease,box-shadow 150ms ease}
+.lq-card:hover{border-color:#2B36FF;box-shadow:0 0 0 1px #2B36FF}
+.lq-tag{font:700 11px/1.4 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#999999}
+.lq-name{font:700 24px/1.2 'IBM Plex Sans',sans-serif}.lq-blurb{font-size:15px;line-height:1.5;color:#555555}
+.lq-go{margin-top:8px;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#2B36FF}
+.lq-foot{margin:40px 0 0;font-size:12px;color:#999999}
+@media (max-width:767px){.cq-topbar{padding:0 24px;height:60px}.lq{padding:48px 20px 72px}.lq h1{font-size:36px}.lq-cards{grid-template-columns:1fr}}
+</style></head><body>
+<div class="cq-topbar"><a href="https://www.solid2017.com" aria-label="Solid Design Studio"><img src="/solid-logo.svg" alt="Solid"></a></div>
+<main class="lq"><p class="lq-kicker">Solid Design Studio</p><h1>Tell us about your <span>project</span>.</h1>
+<p class="lq-lead">Choose the questionnaire your account manager asked you to fill in.</p>
+<div class="lq-cards">%s</div><p class="lq-foot">© Solid Design Studio</p></main>
+</body></html>
+""" % cards
+
+
 def main():
     shell = shell_html()
     nav = nav_html()
@@ -686,8 +787,11 @@ def main():
     open(os.path.join(OUT, "standalone.html"), "w").write(page)
     open(os.path.join(OUT, "fields.json"), "w").write(fmap)
     if os.path.isdir(SITE):
-        open(os.path.join(SITE, "index.html"), "w").write(page)
-        open(os.path.join(SITE, "fields.json"), "w").write(fmap)
+        dest = os.path.join(SITE, FORM["page"])
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        open(dest, "w").write(page)
+        open(os.path.join(SITE, FORM["fields"]), "w").write(fmap)
+        open(os.path.join(SITE, "index.html"), "w").write(landing_html())
     print("shell %d chars, nav %d, css %d, head %d, footer %d" % (len(shell), len(nav), len(CSS), len(HEAD_CSS), len(JS)))
     for sec, s in zip(SECTIONS, steps):
         print("step %s: %d chars" % (sec["num"], len(s)))

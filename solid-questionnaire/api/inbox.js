@@ -1,5 +1,5 @@
 "use strict";
-const { rpc, page, escapeHtml } = require("./_lib");
+const { rpc, page, escapeHtml, FORMS, formOf } = require("./_lib");
 
 module.exports = async (req, res) => {
   const url = new URL(req.url, "https://x");
@@ -22,12 +22,13 @@ module.exports = async (req, res) => {
   if (!rows.length) {
     body += "<p>No submissions yet.</p>";
   } else {
-    body += "<table><thead><tr><th>Received</th><th>Project</th><th>Contact</th><th>Type</th><th>Notified</th></tr></thead><tbody>";
+    body += "<table><thead><tr><th>Received</th><th>Project</th><th>Questionnaire</th><th>Contact</th><th>Type</th><th>Notified</th></tr></thead><tbody>";
     for (const r of rows) {
       const link = "/s/" + r.id + "?t=" + encodeURIComponent(r.access_token);
       body +=
         "<tr><td>" + escapeHtml(new Date(r.created_at).toISOString().slice(0, 16).replace("T", " ")) + " UTC</td>" +
         '<td><a href="' + link + '">' + escapeHtml(r.project_name || "Untitled") + "</a></td>" +
+        "<td>" + escapeHtml(FORMS[formOf(r.answers)].label) + "</td>" +
         "<td>" + escapeHtml(r.contact || "") + "</td>" +
         "<td>" + escapeHtml(r.project_type || "") + "</td>" +
         '<td><span class="pill">' + escapeHtml(r.notified_via || "none") + "</span></td></tr>";

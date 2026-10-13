@@ -1,0 +1,204 @@
+{
+  "sections": [
+    {
+      "code": "00",
+      "title": "About You"
+    },
+    {
+      "code": "01",
+      "title": "Where are you starting from?"
+    },
+    {
+      "code": "02",
+      "title": "Why are you doing this now?"
+    },
+    {
+      "code": "03",
+      "title": "What should change?"
+    },
+    {
+      "code": "04",
+      "title": "How should the brand feel?"
+    },
+    {
+      "code": "05",
+      "title": "Who are we designing for?"
+    },
+    {
+      "code": "06",
+      "title": "References"
+    },
+    {
+      "code": "07",
+      "title": "What are you expecting from the project?"
+    },
+    {
+      "code": "08",
+      "title": "Final Check"
+    }
+  ],
+  "fields": [
+    {
+      "key": "00.1 Brand / Company Name",
+      "label": "Brand / Company Name",
+      "section": "00",
+      "sectionTitle": "About You"
+    },
+    {
+      "key": "00.2 Primary Contact",
+      "label": "Primary Contact",
+      "section": "00",
+      "sectionTitle": "About You"
+    },
+    {
+      "key": "01.1 Starting point",
+      "label": "Which best describes your project?",
+      "section": "01",
+      "sectionTitle": "Where are you starting from?"
+    },
+    {
+      "key": "01.2 Looking for",
+      "label": "What best describes what you are looking for?",
+      "section": "01",
+      "sectionTitle": "Where are you starting from?"
+    },
+    {
+      "key": "02.1 What prompted this project",
+      "label": "What prompted this project?",
+      "section": "02",
+      "sectionTitle": "Why are you doing this now?"
+    },
+    {
+      "key": "02.1 What prompted this project — Other",
+      "label": "What prompted this project? (Other)",
+      "section": "02",
+      "sectionTitle": "Why are you doing this now?"
+    },
+    {
+      "key": "02.2 What changed / what is missing",
+      "label": "Please tell us more about what changed or what you feel is missing:",
+      "section": "02",
+      "sectionTitle": "Why are you doing this now?"
+    },
+    {
+      "key": "03.1 Amount of change",
+      "label": "How much change are you expecting?",
+      "section": "03",
+      "sectionTitle": "What should change?"
+    },
+    {
+      "key": "03.2 Keep from current identity",
+      "label": "What would you like to keep from the current identity?",
+      "section": "03",
+      "sectionTitle": "What should change?"
+    },
+    {
+      "key": "03.3 Move away from",
+      "label": "Is there anything you definitely want to move away from?",
+      "section": "03",
+      "sectionTitle": "What should change?"
+    },
+    {
+      "key": "04.1 Brand should feel",
+      "label": "How would you like the brand to be perceived after this project?",
+      "section": "04",
+      "sectionTitle": "How should the brand feel?"
+    },
+    {
+      "key": "04.1 Brand should feel — Other",
+      "label": "How would you like the brand to be perceived after this project? (Other)",
+      "section": "04",
+      "sectionTitle": "How should the brand feel?"
+    },
+    {
+      "key": "04.2 Brand should NOT feel",
+      "label": "How should it NOT feel?",
+      "section": "04",
+      "sectionTitle": "How should the brand feel?"
+    },
+    {
+      "key": "04.2 Brand should NOT feel — Other",
+      "label": "How should it NOT feel? (Other)",
+      "section": "04",
+      "sectionTitle": "How should the brand feel?"
+    },
+    {
+      "key": "05.1 Primary audience",
+      "label": "Who is the primary audience?",
+      "section": "05",
+      "sectionTitle": "Who are we designing for?"
+    },
+    {
+      "key": "05.1 Primary audience — Other",
+      "label": "Who is the primary audience? (Other)",
+      "section": "05",
+      "sectionTitle": "Who are we designing for?"
+    },
+    {
+      "key": "05.2 New / different audience",
+      "label": "Is reaching a new or different audience part of this project?",
+      "section": "05",
+      "sectionTitle": "Who are we designing for?"
+    },
+    {
+      "key": "06.1 Has references",
+      "label": "Do you have any brands or visual references that represent a direction you like?",
+      "section": "06",
+      "sectionTitle": "References"
+    },
+    {
+      "key": "06.1 References — links",
+      "label": "If yes, please share them with us.",
+      "section": "06",
+      "sectionTitle": "References"
+    },
+    {
+      "key": "06.1 References — Files",
+      "label": "If yes, please share them with us. (uploaded files)",
+      "section": "06",
+      "sectionTitle": "References"
+    },
+    {
+      "key": "06.2 Liked about references",
+      "label": "What do you like about these references?",
+      "section": "06",
+      "sectionTitle": "References"
+    },
+    {
+      "key": "06.2 Liked about references — Other",
+      "label": "What do you like about these references? (Other)",
+      "section": "06",
+      "sectionTitle": "References"
+    },
+    {
+      "key": "07.1 Expected outcome",
+      "label": "Which of the following best describes what you expect the final outcome to be?",
+      "section": "07",
+      "sectionTitle": "What are you expecting from the project?"
+    },
+    {
+      "key": "07.1 Expected outcome — Other",
+      "label": "Which of the following best describes what you expect the final outcome to be? (Other)",
+      "section": "07",
+      "sectionTitle": "What are you expecting from the project?"
+    },
+    {
+      "key": "07.2 Ideal outcome",
+      "label": "How would you describe your ideal outcome?",
+      "section": "07",
+      "sectionTitle": "What are you expecting from the project?"
+    },
+    {
+      "key": "08.1 Expectation",
+      "label": "Which statement best reflects your expectation?",
+      "section": "08",
+      "sectionTitle": "Final Check"
+    },
+    {
+      "key": "08.2 Anything else",
+      "label": "Is there anything important you would like us to know before we begin?",
+      "section": "08",
+      "sectionTitle": "Final Check"
+    }
+  ]
+}

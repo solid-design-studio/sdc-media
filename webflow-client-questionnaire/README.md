@@ -44,7 +44,8 @@ together" block, the contact form and the navigation are unchanged.
 
 | File | Purpose |
 | --- | --- |
-| `spec.py` | The questionnaire content: every section, question, option, help text, limits, images and conditional rules. Edit this to change wording or options. |
+| `spec_branding.py` | The Branding / Graphic Design questionnaire (same format; images are Nourah's collages, uploaded as `gd-*.jpg`). |
+| `spec.py` | The interior questionnaire content: every section, question, option, help text, limits, images and conditional rules. Edit this to change wording or options. |
 | `build.py` | Generates the HTML/CSS/JS into `out/` and writes the hosted page and field map straight into `../solid-questionnaire/` (`index.html`, `fields.json`). Images come from the Supabase `questionnaire` bucket. |
 | `test.js` | Playwright checks against `out/preview.html`: stepper, validation, limits, conditionals, Section 08 routing, submit payload, keyboard, mobile overflow. |
 | `out/` | Generated output. `head.html` and `footer.html` are what is on the Webflow page; `contact-cta.*` is the Contact page band. |
@@ -52,8 +53,10 @@ together" block, the contact form and the navigation are unchanged.
 ## Regenerate / test locally
 
 ```bash
-python3 build.py          # writes out/
-node test.js              # needs playwright; uses the Chromium at /opt/pw-browsers/chromium
+python3 build.py            # interior (spec.py)            -> out/,          ../solid-questionnaire/interior/index.html (+ landing page)
+python3 build.py branding   # branding (spec_branding.py)   -> out-branding/, ../solid-questionnaire/graphic-design/index.html
+node test.js                # interior checks; needs playwright (Chromium at /opt/pw-browsers/chromium)
+node test-branding.js       # branding / graphic design checks
 ```
 
 To change the page in Webflow after editing `spec.py`: rebuild, then re-insert the affected

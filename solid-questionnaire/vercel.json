@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/interior",
+      "destination": "/interior/index.html"
+    },
+    {
+      "source": "/graphic-design",
+      "destination": "/graphic-design/index.html"
+    },
+    {
       "source": "/s/:id",
       "destination": "/api/view?id=:id"
     },
@@ -22,6 +30,13 @@
           "value": "noindex, nofollow"
         }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/branding",
+      "destination": "/graphic-design",
+      "permanent": false
     }
   ]
 }

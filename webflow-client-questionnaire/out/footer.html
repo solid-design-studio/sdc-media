@@ -26,13 +26,15 @@ $('.cq-other',q).forEach(function(oth){var lab=boxFor(oth);var on=$('input:check
 if(isMulti(q))compile(q)}
 function conditionals(){$('[data-show-if]').forEach(function(el){var show=evalShow(el);var hidden=el.classList.contains('cq-hidden');if(!show&&!hidden)clearInputs(el);el.classList.toggle('cq-hidden',!show)});
 steps.forEach(function(s){if(!s.getAttribute('data-conditional'))return;var subs=$('.cq-sub',s);var any=subs.some(function(x){return !x.classList.contains('cq-hidden')});s.classList.toggle('cq-skip',!any)})}
-function visible(){return steps.filter(function(s){return !s.classList.contains('cq-skip')})}
+function visible(){return steps.filter(function(s){return !s.classList.contains('cq-skip')&&!s.classList.contains('cq-hidden')})}
 function paint(){var vs=visible();if(cur>vs.length-1)cur=vs.length-1;steps.forEach(function(s){s.classList.remove('is-active')});var s=vs[cur];s.classList.add('is-active');
 if(lbl)lbl.textContent='Step '+(cur+1)+' of '+vs.length;if(ttl)ttl.textContent=s.getAttribute('data-title')||'';if(bar)bar.style.width=Math.round((cur+1)/vs.length*100)+'%';
 nav.classList.toggle('has-back',cur>0);nav.classList.toggle('has-next',cur<vs.length-1);nav.classList.toggle('is-last',cur===vs.length-1);hideErr()}
 function showErr(m){if(err){err.textContent=m;err.classList.add('is-on')}}
 function hideErr(){if(err)err.classList.remove('is-on');$('.is-invalid').forEach(function(i){i.classList.remove('is-invalid')})}
-function validate(step){var bad=$('[required]',step).filter(function(i){return !i.closest('.cq-hidden')&&!i.value.trim()});bad.forEach(function(i){i.classList.add('is-invalid')});if(bad.length){showErr('Please complete the highlighted fields before continuing.');bad[0].focus();return false}return true}
+function validate(step){var bad=$('[required]',step).filter(function(i){return !i.closest('.cq-hidden')&&!i.value.trim()});bad.forEach(function(i){i.classList.add('is-invalid')});
+var badQ=$('.cq-q[data-required]',step).filter(function(q){return !q.closest('.cq-hidden')&&!q.querySelector('input:checked')});badQ.forEach(function(q){q.classList.add('is-invalid')});
+if(bad.length||badQ.length){showErr(badQ.length&&!bad.length?'Please choose an option for the highlighted question before continuing.':'Please complete the highlighted fields before continuing.');if(bad.length)bad[0].focus();else badQ[0].scrollIntoView({block:'center',behavior:'smooth'});return false}return true}
 function scrollTop(){var p=page.querySelector('.cq-progress')||form;var y=p.getBoundingClientRect().top+window.pageYOffset-16;window.scrollTo({top:y,behavior:'smooth'})}
 function go(d){var vs=visible();if(d>0&&!validate(vs[cur]))return;cur=Math.max(0,Math.min(cur+d,vs.length-1));paint();scrollTop()}
 /* file uploads: each file goes straight to private storage via /f; the hidden field keeps the stored paths */
@@ -54,7 +56,7 @@ $('.cq-drop').forEach(function(d){var box=d.closest('.cq-upload');
 d.addEventListener('dragover',function(e){e.preventDefault();d.classList.add('is-over')});
 d.addEventListener('dragleave',function(){d.classList.remove('is-over')});
 d.addEventListener('drop',function(e){e.preventDefault();d.classList.remove('is-over');addFiles(box,e.dataTransfer&&e.dataTransfer.files)})});
-form.addEventListener('change',function(e){if(e.target.type==='file'){addFiles(e.target.closest('.cq-upload'),e.target.files);e.target.value='';return}var q=e.target.closest('.cq-q');if(q)refresh(q);if(e.target.type==='radio')conditionals();if(e.target.type==='radio')paint()});
+form.addEventListener('change',function(e){if(e.target.type==='file'){addFiles(e.target.closest('.cq-upload'),e.target.files);e.target.value='';return}var q=e.target.closest('.cq-q');if(q&&q.classList.contains('is-invalid')&&q.querySelector('input:checked'))q.classList.remove('is-invalid');if(q)refresh(q);if(e.target.type==='radio')conditionals();if(e.target.type==='radio')paint()});
 form.addEventListener('input',function(e){var q=e.target.closest('.cq-q');if(q&&e.target.closest('.cq-other'))compile(q);if(e.target.classList.contains('is-invalid')&&e.target.value.trim())e.target.classList.remove('is-invalid')});
 form.addEventListener('click',function(e){var x=e.target.closest('.cq-file-x');if(x){e.preventDefault();var li=x.closest('.cq-file'),box=x.closest('.cq-upload');li.parentNode.removeChild(li);syncUp(box);return}
 var b=e.target.closest('[data-nav]');if(b){e.preventDefault();go(b.getAttribute('data-nav')==='next'?1:-1);return}

@@ -1,6 +1,5 @@
 "use strict";
 /* Shared helpers for the questionnaire site's serverless functions. */
-const fieldsFile = require("../fields.json");
 
 const SUPABASE_URL = process.env.SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "";
@@ -53,13 +52,38 @@ async function rpc(name, args) {
   });
 }
 
-/** The questionnaire's questions in order, with section titles. */
-const FIELDS = fieldsFile.fields;
-const SECTIONS = fieldsFile.sections;
-const FIELD_BY_KEY = new Map(FIELDS.map((f) => [f.key, f]));
+/**
+ * The questionnaires this site hosts. Each page posts its id as `form`; it is stored in the answers as
+ * `_form` (older submissions have none and are interior). `fields` is the ordered question map written
+ * by the generator, used to lay out emails and answer pages.
+ */
+const FORMS = {
+  interior: {
+    label: "Interior & Spatial Design",
+    fields: require("../fields.json"),
+    name: "01.1 Project / Brand Name",
+    contact: "01.2 Primary Contact",
+    type: "01.5 Project type",
+    required: ["01.1 Project / Brand Name", "01.2 Primary Contact", "01.3 Project Location / Venue"],
+  },
+  branding: {
+    label: "Branding & Graphic Design",
+    fields: require("../fields-branding.json"),
+    name: "00.1 Brand / Company Name",
+    contact: "00.2 Primary Contact",
+    type: "01.1 Starting point",
+    required: ["00.1 Brand / Company Name", "00.2 Primary Contact"],
+  },
+};
+
+function formOf(answers) {
+  const id = answers && answers._form;
+  return Object.prototype.hasOwnProperty.call(FORMS, id) ? id : "interior";
+}
 
 /** Answers grouped by section, in questionnaire order; empty answers left out. */
 function groupAnswers(answers) {
+  const { fields: FIELDS, sections: SECTIONS } = FORMS[formOf(answers)].fields;
   const groups = [];
   const seen = new Set();
   for (const sec of SECTIONS) {
@@ -74,7 +98,7 @@ function groupAnswers(answers) {
   }
   // Anything the page sent that the map does not know (should not happen; kept rather than dropped).
   const extra = Object.keys(answers)
-    .filter((k) => !seen.has(k) && typeof answers[k] === "string" && answers[k].trim())
+    .filter((k) => !seen.has(k) && k.charAt(0) !== "_" && typeof answers[k] === "string" && answers[k].trim())
     .map((k) => ({ key: k, label: k, value: answers[k].trim() }));
   if (extra.length) groups.push({ code: "", title: "Other fields", items: extra });
   return groups;
@@ -89,14 +113,15 @@ function escapeHtml(s) {
 }
 
 function summaryLine(answers) {
-  const name = (answers["01.1 Project / Brand Name"] || "").trim() || "Untitled project";
-  const type = (answers["01.5 Project type"] || "").trim();
+  const form = FORMS[formOf(answers)];
+  const name = (answers[form.name] || "").trim() || "Untitled project";
+  const type = (answers[form.type] || "").trim();
   return type ? name + " (" + type + ")" : name;
 }
 
 function formatText(sub, link) {
   const lines = [];
-  lines.push("New client questionnaire: " + summaryLine(sub.answers));
+  lines.push("New client questionnaire (" + FORMS[formOf(sub.answers)].label + "): " + summaryLine(sub.answers));
   lines.push("Received " + new Date(sub.created_at).toUTCString().replace("GMT", "UTC"));
   if (link) lines.push("Open the full submission: " + link);
   for (const g of groupAnswers(sub.answers)) {
@@ -154,7 +179,7 @@ function fileLinks(value, id, token) {
 }
 
 function formatHtml(sub, token) {
-  let out = '<p class="kicker">Client questionnaire · Interior &amp; Spatial Design</p>';
+  let out = '<p class="kicker">Client questionnaire · ' + escapeHtml(FORMS[formOf(sub.answers)].label) + "</p>";
   out += "<h1>" + escapeHtml(summaryLine(sub.answers)) + "</h1>";
   out += '<p class="meta">Received ' + escapeHtml(new Date(sub.created_at).toUTCString().replace("GMT", "UTC")) + "</p>";
   for (const g of groupAnswers(sub.answers)) {
@@ -310,4 +335,4 @@ function origin(req) {
   return "https://" + host;
 }
 
-module.exports = { insertSubmission, rpc, groupAnswers, formatText, formatHtml, page, escapeHtml, summaryLine, notify, origin, FIELD_BY_KEY };
+module.exports = { insertSubmission, rpc, groupAnswers, formatText, formatHtml, page, escapeHtml, summaryLine, notify, origin, FORMS, formOf };
