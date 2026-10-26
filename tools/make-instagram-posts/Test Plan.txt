@@ -1,0 +1,33 @@
+TEST PLAN: MAKE INSTAGRAM POSTS (NEW VERSION)
+
+Run this on a Mac with Illustrator before the new version replaces the one
+people use. Use the two scripts in this Testing folder, not the one above it.
+
+DECKS
+1. 3 Guys_Open File.ai (Hala > 2026 > Solid > Solid portfolio > 3 guys > website)
+   Compare against: 3 guys feature.ai (one folder up)
+2. Nashville
+3. Mumsie
+Work on copies, not the originals.
+
+FOR EACH DECK
+1. Open the deck. Run "Make Instagram Posts.jsx" from this Testing folder.
+   Leave every slide on Designed. Export at 300 ppi. Note how long it takes.
+2. The posts file opens. Run "Check Instagram Posts.jsx" from this folder.
+   It must say PASSED. Save the "check.txt" it writes.
+3. Look through the JPG folder by eye:
+   - every mockup whole, nothing cut in two
+   - no awkward crops of photos
+   - text easy to read, aligned, same size from post to post
+   - same margins on every post
+   - no big empty areas
+4. For 3 Guys only: put our posts next to 3 guys feature.ai and note every
+   post where Hala's version is clearly better, and why.
+
+PASS
+- Check says PASSED on all three decks.
+- No post is broken (missing artwork, wrong colours, broken pattern or mask).
+- On 3 Guys, most posts are close to Hala's.
+
+Then the new script replaces the one in Make-Instagram-Posts, and the
+manager gets the link to that folder.
