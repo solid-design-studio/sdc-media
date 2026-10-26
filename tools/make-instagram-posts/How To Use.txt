@@ -1,0 +1,93 @@
+MAKE INSTAGRAM POSTS
+
+Turns an approved presentation into designed Instagram posts (1080 x 1350)
+in Illustrator, exported as 300 ppi JPGs. Nothing to install. Your
+presentation file is never changed.
+
+The tool does not copy the slides. It takes each slide apart and lays the
+pieces out again for Instagram:
+- Every mockup, photo and logo gets its own post, whole. Nothing is cut in two.
+- The text is set again, at one size across the deck, aligned the way it was
+  written (left, centred, or right for Arabic).
+- A slide with one mockup and a little text becomes one post, text above it.
+- Each post keeps the slide's background, or the coloured panel the piece
+  sat on.
+- Every post has the same margins.
+- Page numbers, corner logos and small slide captions are left out.
+
+
+EVERY PROJECT
+
+1. Open the approved presentation (.ai) in Illustrator.
+
+   If Illustrator says fonts are missing: install them from the designer's
+   files first (handovers have a Fonts folder), then open the presentation
+   again. Otherwise some text can show wrong in the posts.
+   If Illustrator says "Could not find the linked file": tick "Apply to All",
+   then click Ignore. The tool will tell you which slides are missing a photo.
+
+2. In the menu bar, click File > Scripts > Other Script...
+
+3. Go to Dropbox > Nardeen > SOLAI > Tools > Make-Instagram-Posts,
+   click "Make Instagram Posts.jsx", click Open.
+   (After the first time, Illustrator opens this folder for you.)
+
+4. A window called "Make Instagram Posts" appears. It lists every slide, how
+   many posts it will make, and what it will become:
+   - Designed: each asset on its own post, the text set again. This is the
+     default.
+   - Whole slide, shrunk to fit: keeps the slide's layout, centred on its
+     background.
+   - Whole slide, filling the post: keeps the slide's layout, trims the sides.
+   - Skip: leaves the slide out.
+
+   You do not have to change anything. Slides marked "check" are worth a look
+   once the posts are made; hold the mouse over "check" to see why.
+
+5. Pick the export size (300 ppi is the default) and click "Make posts".
+   A progress bar shows while it works.
+
+6. A message tells you what was made and which posts to look at. Click OK.
+
+   Next to your presentation you now have:
+   - "<presentation name> Instagram.ai": the posts, one 1080 x 1350 artboard
+     per post, each in its own layer. This is now the open window.
+   - A folder with the same name: the JPGs, numbered in order, ready to upload.
+
+   If the presentation's folder can't be saved to, both go on your Desktop
+   instead, and the message says so.
+
+
+CHANGING A POST
+
+1. In the posts file, double-click the post to go inside it.
+2. Move or scale the artwork. Hold Shift while scaling to keep its shape.
+   Press Esc when done.
+3. Run File > Scripts > Other Script... > "Make Instagram Posts.jsx" again.
+   It sees this is a posts file. Click Export.
+   It saves your changes and puts the new JPGs in a folder ending in
+   "updated", next to the posts file.
+
+
+WHAT "CHECK" MEANS
+
+- background photo trimmed a lot: a wide photo was cropped to fill the tall
+  post. Double-click the post and slide the photo to show the best part.
+- photo trimmed to fill the post: the same, but only a little was trimmed.
+- a lot of empty space around the asset: the asset is very wide or very
+  small, so it leaves room around it. Scale it up or switch the slide to
+  "Whole slide".
+- image enlarged a lot: the photo may look soft. Ask for a larger file.
+- a long line of text was set smaller to fit: check it is still easy to read.
+- detailed pattern was scaled: check the pattern still looks right.
+- missing image: the designer's handover is missing a linked photo. Ask for
+  the Links folder, put it next to the presentation, and run the tool again.
+
+
+GOOD TO KNOW
+
+- Running the tool twice on the same presentation never overwrites anything.
+  The second set is numbered "Instagram 2".
+- Decks with more than 120 posts are split into "Instagram part 1",
+  "Instagram part 2", and so on.
+- Keep at least 20 GB free on your Mac when working with large presentations.
