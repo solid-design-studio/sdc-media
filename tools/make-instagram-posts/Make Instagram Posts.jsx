@@ -789,7 +789,7 @@
         var c = containIn(rw(box), rh(box), safe), notes = [];
         if (c.s < 0.4 * SETTINGS.postWidth / rw(slide.ab)) notes.push("artwork gets small");
         if (detailed(content)) notes.push("detailed pattern was scaled, check it looks right");
-        return [{ kind: "slide", surface: sf, pieces: [{ members: content, clip: slide.ab, from: box, to: c.rect }], notes: notes }];
+        return [{ kind: "slide", surface: sf, pieces: [{ members: content, clip: box, from: box, to: c.rect }], notes: notes }];
     }
 
     // "Whole slide, filling the post": the slide as it is, trimmed at the sides.
@@ -830,6 +830,14 @@
         group.clipped = true;
     }
 
+    // Copies keep the lock of the original. Unlock them, children too, so they
+    // can be scaled and moved, and so they can be adjusted later.
+    function unlockAll(item) {
+        try { if (item.locked) item.locked = false; } catch (e) {}
+        if (item.typename !== "GroupItem") return;
+        for (var i = 0; i < item.pageItems.length; i++) unlockAll(item.pageItems[i]);
+    }
+
     // Copies `members` into `parent`, clipped to `clip` (slide coordinates),
     // and scales them so the slide rect `from` lands exactly on `to`.
     function placePiece(parent, members, clip, from, to) {
@@ -837,7 +845,7 @@
         for (var i = 0; i < members.length; i++) {
             var d;
             try { d = members[i].item.duplicate(g, ElementPlacement.PLACEATEND); } catch (e) { failed++; continue; }
-            try { d.locked = false; } catch (e2) {}
+            unlockAll(d);
             src = union(src, members[i].rect);
             landed = union(landed, itemRect(d) || plainBounds(d));
         }
@@ -865,18 +873,18 @@
     function drawSurface(group, surface, R) {
         var rect = group.pathItems.rectangle(R.t, R.l, rw(R), rh(R));
         rect.stroked = false;
-        if (surface.white) { rect.fillColor = white(); return; }
+        if (surface.white) { rect.fillColor = white(); return 0; }
         if (surface.fill) {
-            try { rect.fillColor = surface.fill; return; } catch (e) {}
+            try { rect.fillColor = surface.fill; return 0; } catch (e) {}
         }
         // Photos, gradients and patterns: copy the real thing, scaled to cover the post.
         rect.fillColor = white();
-        placePiece(group, [surface.entry], surface.from, surface.from, shift(surface.to, R.l, R.t));
+        return placePiece(group, [surface.entry], surface.from, surface.from, shift(surface.to, R.l, R.t));
     }
 
     function buildPost(layer, post, R) {
-        var g = layer.groupItems.add(), failed = 0;
-        drawSurface(g, post.surface, R);
+        var g = layer.groupItems.add();
+        var failed = drawSurface(g, post.surface, R);
         for (var i = 0; i < post.pieces.length; i++) {
             var p = post.pieces[i];
             failed += placePiece(g, p.members, p.clip, p.from, snap(shift(p.to, R.l, R.t)));
@@ -1070,14 +1078,17 @@
         try {
             file.encoding = "BINARY";
             if (!file.open("e")) return false;
+            file.encoding = "BINARY";
             var plan = jfifPatch(file.read(20), ppi);
             if (plan && plan.offset >= 0) { file.seek(plan.offset); file.write(plan.bytes); }
             file.close();
             if (!plan || plan.offset >= 0) return !!plan;
             file.open("r");
+            file.encoding = "BINARY";
             var all = file.read();
             file.close();
             file.open("w");
+            file.encoding = "BINARY";
             file.write(all.substring(0, 2) + plan.insert + all.substring(2));
             file.close();
             return true;
@@ -1112,8 +1123,11 @@
         var subs = folder.getFiles(function (x) { return x instanceof Folder; });
         for (i = 0; i < subs.length; i++) {
             var files = subs[i].getFiles("*.jpg");
+            var other = subs[i].getFiles(function (x) { return x instanceof File && !/\.jpg$/i.test(x.name); });
+            for (var o = 0; o < other.length; o++) other[o].remove();   // Finder's .DS_Store, so the folder can go
             for (var k = 0; k < files.length; k++) {
-                if (files[k].copy(folder.fsName + "/" + files[k].name)) files[k].remove();
+                // File names come URI-encoded ("01%20Slide"). Decode, or spaces could turn into %20.
+                if (files[k].copy(folder.fsName + "/" + File.decode(files[k].name))) files[k].remove();
             }
             subs[i].remove();
         }
@@ -1259,7 +1273,7 @@
         } catch (e5) {
             failed.push("JPG export (" + e5.message + ")");
         }
-        doc.save();
+        try { doc.save(); } catch (e6) { failed.push("Saving the posts file after export (" + e6.message + ")"); }
         app.executeMenuCommand("fitall");
         return { doc: doc, file: outFile, folder: jpgFolder, where: where, failed: failed, untagged: untagged };
     }
@@ -1311,6 +1325,19 @@
             return choice ? "nothing" : "cancelled";
         }
 
+        // Shadows, blurs and strokes scale with the artwork, whatever the user's
+        // preference ("Scale Strokes & Effects"). Put back afterwards.
+        var scalePref = null;
+        try { scalePref = app.preferences.getBooleanPreference("scaleLineWeight"); app.preferences.setBooleanPreference("scaleLineWeight", true); } catch (eP) { scalePref = null; }
+        try {
+            return buildAll(src, srcFile, slides, posts, choice, missing, baseName, outParent, opened);
+        } finally {
+            try { if (scalePref !== null) app.preferences.setBooleanPreference("scaleLineWeight", scalePref); } catch (eP2) {}
+        }
+    }
+
+    function buildAll(src, srcFile, slides, posts, choice, missing, baseName, outParent, opened) {
+        var i, k;
         // Illustrator's canvas holds about 120 posts, so long decks get more than one file.
         var chunks = Math.ceil(posts.length / SETTINGS.postsPerFile), results = [];
         var progress = progressWindow(posts.length);

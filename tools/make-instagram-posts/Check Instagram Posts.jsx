@@ -17,7 +17,7 @@
 
 (function () {
 
-    var POST_W = 1080, POST_H = 1350, MARGIN = 90, TOL = 1;
+    var POST_W = 1080, POST_H = 1350, MARGIN = 90, TOL = 4; // TOL: text keeps a few px of room for its edges
     var POSTS_LAYER = "Instagram posts";
     var TEST = $.global.MIC_TEST || null;
 
@@ -43,6 +43,21 @@
             }
         }
         return rectFromBounds(item.visibleBounds);
+    }
+
+    // A clipped piece whose artwork misses its own frame shows nothing.
+    function showsSomething(group) {
+        if (!group.clipped) return true;
+        var clip = shownRect(group), art = null;
+        for (var i = 0; i < group.pageItems.length; i++) {
+            var it = group.pageItems[i];
+            if (isClipPath(it) || it.hidden) continue;
+            var b = rectFromBounds(it.visibleBounds);
+            art = art ? { l: Math.min(art.l, b.l), t: Math.max(art.t, b.t), r: Math.max(art.r, b.r), b: Math.min(art.b, b.b) } : b;
+        }
+        if (!art) return false;
+        var w = Math.min(art.r, clip.r) - Math.max(art.l, clip.l), h = Math.min(art.t, clip.t) - Math.max(art.b, clip.b);
+        return w > 0 && h > 0 && w * h >= rw(clip) * rh(clip) * 0.5;
     }
 
     // Width, height and ppi of a JPG, read from its header bytes (a string of
@@ -109,6 +124,7 @@
                     var pr = shownRect(p);
                     if (fills(pr, r, TOL)) continue; // a background or a photo filling the post
                     pieces++;
+                    if (!showsSomething(p)) fails.push(name + ": an asset is out of view inside its frame, so the post shows nothing there");
                     if (!inside(pr, r, TOL)) fails.push(name + ": an asset is cut by the artboard edge");
                     else if (!inside(pr, safe, TOL)) warns.push(name + ": an asset sits inside the " + MARGIN + " px margin");
                 }
