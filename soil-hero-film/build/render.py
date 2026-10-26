@@ -10,6 +10,7 @@ P = lambda *a: os.path.join(BASE, *a)
 W, H, FPS = 1920, 1080, 24
 DUR = 61.5
 SHUTTER = 0.75  # fraction of a frame the virtual shutter stays open
+SCRIM_K = 0.22
 
 
 # ---------- helpers ----------
@@ -512,12 +513,12 @@ def frame_at(t):
             a, ai = text_alpha(t, t0, t1)
             if tid.startswith('ch'): a *= 1.0; ai = 1.0
             if tid in ('t1', 't2', 't3', 't5', 't6', 't7'):
-                img = img * (1 - 0.22 * a * scrim)
+                img = img * (1 - SCRIM_K * a * scrim)
             img = put_text(img, TX[tid], a, ai, blur=not tid.startswith('ch'))
     v0, v1, k0, k1 = KASH
     if v0 <= t <= v1:
         a, ai = text_alpha(t, v0, v1)
-        img = img * (1 - 0.22 * a * scrim)
+        img = img * (1 - SCRIM_K * a * scrim)
         n0 = int(round(ease_io((t - k0) / (k1 - k0)) * 14))
         img = put_text(img, TX[f't4_{n0}'], a, ai)
     # finish: grade, vignette, grain, global fades, mockup tag
